@@ -87,7 +87,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
   }
 
   const refreshData = async () => {
-    console.log('Refreshing dashboard data for current profile...')
     return await fetchDashboardData()
   }
 
