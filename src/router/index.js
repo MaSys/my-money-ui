@@ -58,6 +58,12 @@ const router = createRouter({
           name: 'accounts',
           component: () => import('@/views/AccountsView.vue'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'budgets',
+          name: 'budgets',
+          component: () => import('@/views/BudgetsView.vue'),
+          meta: { requiresAuth: true }
         }
         // Add more protected routes here as needed
       ]
