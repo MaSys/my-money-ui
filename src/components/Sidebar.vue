@@ -75,9 +75,11 @@
       </nav>
 
       <!-- Theme Switcher -->
+      <!--
       <div class="p-4 border-t border-secondary-200">
         <ThemeSwitcher />
       </div>
+      -->
 
       <!-- User section -->
       <div class="p-4 border-t border-secondary-200">
