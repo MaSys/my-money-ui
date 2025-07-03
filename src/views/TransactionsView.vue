@@ -342,33 +342,11 @@ const getCategoryColorClass = (type) => {
 }
 
 const getAccountIcon = (icon) => {
-  // Map account icons to FontAwesome or similar classes
-  const iconMap = {
-    'cc-mastercard': 'fa-brands fa-cc-mastercard',
-    'cc-visa': 'fa-brands fa-cc-visa',
-    'cc-amex': 'fa-brands fa-cc-amex',
-    'university': 'fa-solid fa-university',
-    'piggy-bank': 'fa-solid fa-piggy-bank',
-    'wallet': 'fa-solid fa-wallet',
-    'credit-card': 'fa-solid fa-credit-card'
-  }
-  return iconMap[icon] || 'fa-solid fa-credit-card'
+  return `fa-solid fa-${icon} fa-xl`
 }
 
 const getCategoryIcon = (icon) => {
-  // Map category icons to FontAwesome classes
-  const iconMap = {
-    'bowl-food': 'fa-solid fa-bowl-food',
-    'gas-pump': 'fa-solid fa-gas-pump',
-    'house': 'fa-solid fa-house',
-    'car': 'fa-solid fa-car',
-    'gamepad': 'fa-solid fa-gamepad',
-    'shirt': 'fa-solid fa-shirt',
-    'utensils': 'fa-solid fa-utensils',
-    'shopping-cart': 'fa-solid fa-shopping-cart',
-    'money-bill': 'fa-solid fa-money-bill'
-  }
-  return iconMap[icon] || 'fa-solid fa-circle'
+  return `fa-solid fa-${icon} fa-xl`
 }
 
 // Load initial data
