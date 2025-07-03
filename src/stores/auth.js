@@ -30,6 +30,9 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: false, error: response.error, errors: response.errors }
       }
     } catch (error) {
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('user')
+      localStorage.removeItem('currentProfileId')
       return { success: false, error: error.message }
     }
   }
@@ -54,6 +57,9 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: false, error: response.error, errors: response.errors }
       }
     } catch (error) {
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('user')
+      localStorage.removeItem('currentProfileId')
       return { success: false, error: error.message }
     }
   }
@@ -117,51 +123,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const initializeProfilesAfterAuth = async () => {
     try {
-      // Get profile store instance
       const profileStore = useProfileStore()
-      
-      // Fetch profiles from the server
-      const profilesResult = await profileStore.fetchProfiles()
-      
-      if (profilesResult.success && profilesResult.data.length > 0) {
-        // Check if there's a saved profile in localStorage
-        const savedProfileId = localStorage.getItem('currentProfileId')
-        
-        if (savedProfileId) {
-          // Try to find the saved profile
-          const savedProfile = profilesResult.data.find(p => p.id === parseInt(savedProfileId))
-          if (savedProfile) {
-            profileStore.currentProfile = savedProfile
-            console.log('Profile restored from localStorage:', savedProfile.name)
-            return
-          }
-        }
-        
-        // If no saved profile or saved profile not found, use the first profile
-        const firstProfile = profilesResult.data.find(p => p.is_default) || profilesResult.data[0]
-        profileStore.currentProfile = firstProfile
-        localStorage.setItem('currentProfileId', firstProfile.id.toString())
-        
-        console.log('Profile initialized:', firstProfile.name)
-      } else {
-        // TODO: fix this
-        // No profiles found - create a default profile for new users
-        //console.log('No profiles found - creating default profile')
-        //
-        //const defaultProfileData = {
-        //  name: 'Personal',
-        //  description: 'My personal finances',
-        //  color: '#3B82F6',
-        //  is_default: true
-        //}
-        //
-        //const createResult = await profileStore.createProfile(defaultProfileData)
-        //if (createResult.success) {
-        //  console.log('Default profile created:', createResult.data.name)
-        //} else {
-        //  console.error('Failed to create default profile:', createResult.error)
-        //}
-      }
+      await profileStore.fetchProfiles()
     } catch (error) {
       console.error('Failed to initialize profiles:', error)
     }

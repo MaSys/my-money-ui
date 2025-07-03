@@ -46,10 +46,8 @@ export const useProfileStore = defineStore('profile', () => {
       if (response.success) {
         profiles.value = response.data || []
         
-        // Set current profile if not set and profiles exist
-        if (!currentProfile.value && profiles.value.length > 0) {
-          currentProfile.value = profiles.value.find(p => p.is_default) || profiles.value[0]
-        }
+        // Restore profile from localStorage if available
+        await restoreProfileFromLocalStorage()
         
         return { success: true, data: profiles.value }
       } else {
@@ -64,13 +62,35 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
+  const restoreProfileFromLocalStorage = async () => {
+    const savedProfileId = localStorage.getItem('currentProfileId')
+    
+    if (savedProfileId && profiles.value.length > 0) {
+      let savedProfile = profiles.value.find(p => p.id === savedProfileId)
+      
+      if (savedProfile) {
+        currentProfile.value = savedProfile
+        return
+      }
+    }
+    
+    // If no saved profile or saved profile not found, use the first profile
+    if (profiles.value.length > 0) {
+      const firstProfile = profiles.value.find(p => p.is_default) || profiles.value[0]
+      currentProfile.value = firstProfile
+      localStorage.setItem('currentProfileId', firstProfile.id.toString())
+    }
+  }
+
   const switchProfile = async (profileId) => {
+    
     if (!profileId || currentProfile.value?.id === profileId) {
       return { success: true, data: currentProfile.value }
     }
 
     // Find the profile to switch to
     const newProfile = profiles.value.find(p => p.id === profileId)
+    
     if (!newProfile) {
       return { success: false, error: 'Profile not found' }
     }
@@ -80,8 +100,6 @@ export const useProfileStore = defineStore('profile', () => {
     
     // Store in localStorage for persistence
     localStorage.setItem('currentProfileId', profileId.toString())
-    
-    console.log('Profile switched to:', newProfile.name)
     
     return { success: true, data: newProfile }
   }
@@ -183,23 +201,22 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  const initializeProfile = async () => {
-    // Try to restore current profile from localStorage
-    const savedProfileId = localStorage.getItem('currentProfileId')
+  const debugProfileRestore = () => {
+    const savedId = localStorage.getItem('currentProfileId')
+    console.log('🔍 DEBUG: localStorage currentProfileId:', savedId, 'type:', typeof savedId)
+    console.log('🔍 DEBUG: profiles array:', profiles.value)
+    console.log('🔍 DEBUG: profile IDs and types:', profiles.value.map(p => ({ id: p.id, type: typeof p.id, name: p.name })))
+    console.log('🔍 DEBUG: current profile:', currentProfile.value)
     
-    if (savedProfileId && profiles.value.length > 0) {
-      const savedProfile = profiles.value.find(p => p.id === parseInt(savedProfileId))
-      if (savedProfile) {
-        currentProfile.value = savedProfile
-        return
-      }
-    }
-    
-    // If no saved profile or saved profile not found, use the first profile
-    if (profiles.value.length > 0 && !currentProfile.value) {
-      const firstProfile = profiles.value.find(p => p.is_default) || profiles.value[0]
-      currentProfile.value = firstProfile
-      localStorage.setItem('currentProfileId', firstProfile.id.toString())
+    if (savedId) {
+      const foundProfile = profiles.value.find(p => p.id === parseInt(savedId))
+      console.log('🔍 DEBUG: parseInt search result:', foundProfile)
+      
+      const foundProfileString = profiles.value.find(p => p.id.toString() === savedId)
+      console.log('🔍 DEBUG: string search result:', foundProfileString)
+      
+      const foundProfileEqual = profiles.value.find(p => p.id == savedId)
+      console.log('🔍 DEBUG: loose equality search result:', foundProfileEqual)
     }
   }
 
@@ -228,7 +245,8 @@ export const useProfileStore = defineStore('profile', () => {
     createProfile,
     updateProfile,
     deleteProfile,
-    initializeProfile,
+    restoreProfileFromLocalStorage,
+    debugProfileRestore,
     clearProfile
   }
 }) 
