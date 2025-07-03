@@ -107,6 +107,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const loading = ref(false)
@@ -121,13 +122,26 @@ const handleLogin = async () => {
   loading.value = true
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Use auth store to login
+    const authStore = useAuthStore()
+    const result = await authStore.login({
+      email: form.value.email,
+      password: form.value.password,
+      rememberMe: form.value.rememberMe
+    })
     
-    // Redirect to dashboard
-    router.push('/')
+    if (result.success) {
+      // Check if there was a redirect query parameter
+      const redirectPath = router.currentRoute.value.query.redirect || '/'
+      router.push(redirectPath)
+    } else {
+      console.error('Login failed:', result.error)
+      // You can add error handling UI here
+      alert('Login failed: ' + (result.error || 'Unknown error'))
+    }
   } catch (error) {
     console.error('Login failed:', error)
+    alert('Login failed: ' + error.message)
   } finally {
     loading.value = false
   }

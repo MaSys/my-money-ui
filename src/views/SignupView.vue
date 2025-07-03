@@ -172,13 +172,24 @@ const handleSignup = async () => {
   loading.value = true
   
   try {
-    // Simulate API call
+    // Simulate API call for user registration
+    console.log('Creating account with:', {
+      firstName: form.value.firstName,
+      lastName: form.value.lastName,
+      email: form.value.email
+    })
+    
+    // Simulate successful account creation
     await new Promise(resolve => setTimeout(resolve, 1500))
     
-    // Redirect to login
+    // Show success message (you can replace this with a toast notification)
+    alert('Account created successfully! Please log in.')
+    
+    // Redirect to login page
     router.push('/login')
   } catch (error) {
     console.error('Signup failed:', error)
+    alert('Signup failed: ' + error.message)
   } finally {
     loading.value = false
   }

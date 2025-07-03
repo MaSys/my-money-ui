@@ -114,6 +114,7 @@ import {
   ArrowRightOnRectangleIcon
 } from '@heroicons/vue/24/outline'
 import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
+import { useAuthStore } from '@/stores/auth'
 
 defineProps({
   open: {
@@ -125,9 +126,13 @@ defineProps({
 defineEmits(['close'])
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const logout = () => {
-  // Handle logout logic here
+  // Use auth store to logout
+  authStore.logout()
+  
+  // Redirect to login page
   router.push('/login')
 }
 </script> 
