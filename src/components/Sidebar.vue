@@ -30,6 +30,11 @@
         </button>
       </div>
 
+      <!-- Profile Switcher -->
+      <div class="px-4 py-3 border-b border-secondary-200">
+        <ProfileSwitcher />
+      </div>
+
       <!-- Navigation -->
       <nav class="flex-1 px-4 py-6 space-y-2">
         <router-link
@@ -116,6 +121,7 @@ import {
   ArrowRightOnRectangleIcon
 } from '@heroicons/vue/24/outline'
 import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
+import ProfileSwitcher from '@/components/ProfileSwitcher.vue'
 import { useAuthStore } from '@/stores/auth'
 
 defineProps({

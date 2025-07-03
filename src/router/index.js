@@ -51,6 +51,25 @@ const router = createRouter({
       ]
     },
     {
+      path: '/profiles',
+      component: MainLayout,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: 'create',
+          name: 'create-profile',
+          component: () => import('@/views/ProfileCreateView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'manage',
+          name: 'manage-profiles',
+          component: () => import('@/views/ProfileManageView.vue'),
+          meta: { requiresAuth: true }
+        }
+      ]
+    },
+    {
       // Catch-all route - redirect to dashboard if authenticated, login if not
       path: '/:pathMatch(.*)*',
       name: 'not-found',

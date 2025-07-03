@@ -11,6 +11,16 @@ export const transactionService = {
     }
   },
 
+  // Refresh transactions data (useful after profile switch)
+  async refreshTransactions(params = {}) {
+    try {
+      const response = await apiClient.get('/transactions/refresh', { params })
+      return handleApiResponse(response)
+    } catch (error) {
+      return handleApiError(error)
+    }
+  },
+
   // Get specific transaction by ID
   async getTransaction(id) {
     try {

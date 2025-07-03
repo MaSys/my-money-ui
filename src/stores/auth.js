@@ -63,6 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = null
       localStorage.removeItem('authToken')
       localStorage.removeItem('user')
+      localStorage.removeItem('currentProfileId')
     }
   }
 

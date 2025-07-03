@@ -11,13 +11,19 @@ const api = axios.create({
   },
 })
 
-// Request interceptor to add auth token and CSRF token
+// Request interceptor to add auth token, CSRF token, and profile context
 api.interceptors.request.use(
   (config) => {
     // Add authentication token if available
     const authStore = useAuthStore()
     if (authStore.token) {
       config.headers.Authorization = `Bearer ${authStore.token}`
+    }
+
+    // Add profile context if available
+    const currentProfileId = localStorage.getItem('currentProfileId')
+    if (currentProfileId) {
+      config.headers['X-Current-Profile'] = currentProfileId
     }
 
     // Add CSRF token for Rails (if using cookies)
@@ -30,7 +36,8 @@ api.interceptors.request.use(
     if (import.meta.env.DEV) {
       console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
         data: config.data,
-        params: config.params
+        params: config.params,
+        profileId: currentProfileId
       })
     }
 
