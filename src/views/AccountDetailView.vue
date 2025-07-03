@@ -1,44 +1,53 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center space-x-4">
-        <button
-          @click="goBack"
-          class="p-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg"
-        >
-          <ArrowLeftIcon class="w-5 h-5" />
-        </button>
-        <div v-if="account" class="flex items-center space-x-3">
-          <div
-            class="w-10 h-10 rounded-full flex items-center justify-center text-white"
-            :class="getAccountColorClass(account.color)"
+          <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button
+            @click="goBack"
+            class="p-2 text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 rounded-lg"
           >
-            <i :class="getAccountIcon(account.icon)" class="text-lg"></i>
+            <ArrowLeftIcon class="w-5 h-5" />
+          </button>
+          <div v-if="account" class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center text-white"
+              :class="getAccountColorClass(account.color)"
+            >
+              <i :class="getAccountIcon(account.icon)" class="text-lg"></i>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-secondary-900">{{ account.name }}</h1>
+              <p class="text-sm text-secondary-500">
+                Balance: {{ formatCurrency(account.balance / 100) }}
+                <span v-if="account.reconcile" class="ml-2">
+                  • Cleared: {{ formatCurrency(account.cleared_balance / 100) }}
+                </span>
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 class="text-2xl font-bold text-secondary-900">{{ account.name }}</h1>
-            <p class="text-sm text-secondary-500">
-              Balance: {{ formatCurrency(account.balance / 100) }}
-              <span v-if="account.reconcile" class="ml-2">
-                • Cleared: {{ formatCurrency(account.cleared_balance / 100) }}
-              </span>
-            </p>
+          <div v-else class="animate-pulse">
+            <div class="h-8 bg-gray-300 rounded w-48"></div>
+            <div class="h-4 bg-gray-300 rounded w-32 mt-2"></div>
           </div>
         </div>
-        <div v-else class="animate-pulse">
-          <div class="h-8 bg-gray-300 rounded w-48"></div>
-          <div class="h-4 bg-gray-300 rounded w-32 mt-2"></div>
+        <div class="flex space-x-3">
+          <button
+            @click="createTransaction"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <PlusIcon class="w-4 h-4 mr-2 inline" />
+            Add Transaction
+          </button>
+          <button
+            @click="fetchAccountTransactions"
+            :disabled="loadingTransactions"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+          >
+            <span v-if="loadingTransactions">Refreshing...</span>
+            <span v-else>Refresh</span>
+          </button>
         </div>
       </div>
-      <button
-        @click="fetchAccountTransactions"
-        :disabled="loadingTransactions"
-        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
-      >
-        <span v-if="loadingTransactions">Refreshing...</span>
-        <span v-else>Refresh</span>
-      </button>
-    </div>
 
     <!-- Date Filters -->
     <div class="bg-white rounded-lg shadow p-6">
@@ -160,7 +169,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, PlusIcon } from '@heroicons/vue/24/outline'
 import { apiClient } from '@/services/api'
 import { useProfileData } from '@/composables/useProfileData'
 import TransactionRow from '@/components/TransactionRow.vue'
@@ -304,6 +313,10 @@ async function fetchAccountTransactions() {
 // Actions
 const goBack = () => {
   router.push('/accounts')
+}
+
+const createTransaction = () => {
+  router.push(`/transactions/create?account_id=${route.params.id}`)
 }
 
 const applyQuickFilter = (filter) => {

@@ -122,8 +122,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { CheckCircleIcon, XMarkIcon, ClockIcon, CheckIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { apiClient } from '@/services/api'
+
+const router = useRouter()
 
 // Props
 const props = defineProps({
@@ -254,10 +257,8 @@ const handleMarkAsCleared = async () => {
 }
 
 const handleEdit = () => {
-  // Placeholder for edit functionality
-  console.log('Edit transaction:', props.transaction.id)
-  // TODO: Implement edit functionality
-  // This could open a modal or navigate to an edit page
+  // Navigate to edit transaction page
+  router.push(`/transactions/${props.transaction.id}/edit`)
 }
 
 const handleDelete = async () => {

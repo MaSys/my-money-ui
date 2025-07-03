@@ -10,14 +10,23 @@
           </span>
         </p>
       </div>
-      <button
-        @click="handleRefresh"
-        :disabled="isRefreshing"
-        class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
-      >
-        <span v-if="isRefreshing">Refreshing...</span>
-        <span v-else>Refresh</span>
-      </button>
+      <div class="flex space-x-3">
+        <button
+          @click="createTransaction"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          <PlusIcon class="w-4 h-4 mr-2 inline" />
+          Create Transaction
+        </button>
+        <button
+          @click="handleRefresh"
+          :disabled="isRefreshing"
+          class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+        >
+          <span v-if="isRefreshing">Refreshing...</span>
+          <span v-else>Refresh</span>
+        </button>
+      </div>
     </div>
 
     <!-- Planned Transactions Section -->
@@ -98,9 +107,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { PlusIcon } from '@heroicons/vue/24/outline'
 import { apiClient } from '@/services/api'
 import { useProfileData } from '@/composables/useProfileData'
 import TransactionRow from '@/components/TransactionRow.vue'
+
+const router = useRouter()
 
 // State
 const paidTransactions = ref([])
@@ -184,6 +197,11 @@ async function fetchAllTransactions() {
 // Manual refresh
 const handleRefresh = () => {
   fetchAllTransactions()
+}
+
+// Create transaction
+const createTransaction = () => {
+  router.push('/transactions/create')
 }
 
 // Utility functions

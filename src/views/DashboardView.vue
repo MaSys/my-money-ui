@@ -1,9 +1,18 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-bold text-secondary-900">Dashboard</h1>
-      <p class="text-secondary-600">Welcome back! Here's your financial overview.</p>
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-secondary-900">Dashboard</h1>
+        <p class="text-secondary-600">Welcome back! Here's your financial overview.</p>
+      </div>
+      <button
+        @click="createTransaction"
+        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+      >
+        <PlusIcon class="w-4 h-4 mr-2 inline" />
+        Add Transaction
+      </button>
     </div>
 
     <!-- Stats Grid -->
@@ -153,6 +162,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   BanknotesIcon,
   ArrowUpIcon,
@@ -161,10 +171,13 @@ import {
   ShoppingCartIcon,
   HomeIcon,
   FilmIcon,
-  TruckIcon
+  TruckIcon,
+  PlusIcon
 } from '@heroicons/vue/24/outline'
 import { useDashboardStore } from '@/stores/dashboard'
 import { useProfileData } from '@/composables/useProfileData'
+
+const router = useRouter()
 
 const dashboardStore = useDashboardStore()
 
@@ -175,6 +188,11 @@ const { isRefreshing, currentProfile } = useProfileData(() => dashboardStore.ref
 onMounted(async () => {
   await dashboardStore.fetchDashboardData()
 })
+
+// Create transaction
+const createTransaction = () => {
+  router.push('/transactions/create')
+}
 
 const recentTransactions = ref([
   {
