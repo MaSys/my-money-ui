@@ -16,21 +16,26 @@
           <!-- Category Icon -->
           <div
             class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
-            :class="getCategoryColorClass(transaction.category.category_type)"
+            :class="getCategoryColorClass(transaction)"
           >
-            <i :class="getCategoryIcon(transaction.category.icon)"></i>
+            <i :class="getCategoryIcon(transaction)"></i>
           </div>
         </div>
 
         <div class="flex-1">
           <div class="flex items-center space-x-2">
             <p class="text-sm font-medium text-secondary-900">
-              {{ transaction.category.name }}
+              {{ getTransactionTitle(transaction) }}
             </p>
             <!-- Cleared checkmark for paid transactions -->
             <CheckCircleIcon
               v-if="isPaid && transaction.cleared && transaction.account.reconcile"
               class="w-4 h-4 text-green-600"
+            />
+            <!-- Not Cleared checkmark for paid transactions -->
+            <XMarkIcon
+              v-if="isPaid && !transaction.cleared && transaction.account.reconcile"
+              class="w-4 h-4 text-gray-600"
             />
             <!-- Clock icon for planned transactions -->
             <ClockIcon
@@ -106,7 +111,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { CheckCircleIcon, ClockIcon, CheckIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { CheckCircleIcon, XMarkIcon, ClockIcon, CheckIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { apiClient } from '@/services/api'
 
 // Props
@@ -158,7 +163,24 @@ const getAccountColorClass = (color) => {
   return colorMap[color] || 'bg-gray-500'
 }
 
-const getCategoryColorClass = (type) => {
+const getTransactionTitle = (transaction) => {
+  if (!!transaction.from_transaction_id || !!transaction.to_transaction) {
+    if (transaction.from_transaction) {
+      return `${transaction.from_transaction.account.name} > ${transaction.account.name}`
+    } else if (transaction.to_transaction) {
+      return `${transaction.account.name} > ${transaction.to_transaction.account.name}`
+    }
+  }
+
+  return transaction.category.name
+}
+
+const getCategoryColorClass = (transaction) => {
+  if (!!transaction.from_transaction_id || !!transaction.to_transaction) {
+    return 'bg-gray-500'
+  }
+
+  const type = transaction.category.category_type
   return type === 'income' ? 'bg-green-500' : 'bg-red-500'
 }
 
@@ -166,7 +188,12 @@ const getAccountIcon = (icon) => {
   return `fa-solid fa-${icon} fa-xl`
 }
 
-const getCategoryIcon = (icon) => {
+const getCategoryIcon = (transaction) => {
+  if (!!transaction.from_transaction_id || !!transaction.to_transaction) {
+    return `fa-solid fa-arrows-rotate fa-xl`
+  }
+
+  const icon = transaction.category.icon
   return `fa-solid fa-${icon} fa-xl`
 }
 

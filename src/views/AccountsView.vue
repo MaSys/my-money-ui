@@ -16,34 +16,26 @@
       <div
         v-for="account in accounts"
         :key="account.id"
-        class="bg-white rounded-lg shadow p-6"
+        @click="selectAccount(account)"
+        class="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
       >
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center space-x-3">
             <div
-              class="w-10 h-10 rounded-full flex items-center justify-center"
-              :class="getAccountTypeColor(account.type)"
+              class="w-10 h-10 rounded-full flex items-center justify-center text-white"
+              :class="getAccountColorClass(account.color)"
             >
-              <component
-                :is="getAccountIcon(account.type)"
-                class="w-5 h-5 text-white"
-              />
+              <i :class="getAccountIcon(account.icon)" class="text-lg"></i>
             </div>
             <div>
               <h3 class="text-lg font-medium text-secondary-900">
                 {{ account.name }}
               </h3>
-              <p class="text-sm text-secondary-500">
-                {{ account.type }}
+              <p class="text-sm text-secondary-500 capitalize">
+                {{ account.account_type.replace('_', ' ') }}
               </p>
             </div>
           </div>
-          <button
-            @click="editAccount(account)"
-            class="p-1 text-secondary-400 hover:text-secondary-600"
-          >
-            <PencilIcon class="w-4 h-4" />
-          </button>
         </div>
 
         <div class="space-y-2">
@@ -53,14 +45,24 @@
               class="text-sm font-medium"
               :class="account.balance >= 0 ? 'text-green-600' : 'text-red-600'"
             >
-              {{ formatCurrency(account.balance) }}
+              {{ formatCurrency(account.balance / 100) }}
             </span>
           </div>
           
-          <div class="flex justify-between">
-            <span class="text-sm text-secondary-600">Account Number</span>
+          <div v-if="account.reconcile" class="flex justify-between">
+            <span class="text-sm text-secondary-600">Cleared Balance</span>
+            <span
+              class="text-sm font-medium"
+              :class="account.cleared_balance >= 0 ? 'text-green-600' : 'text-red-600'"
+            >
+              {{ formatCurrency(account.cleared_balance / 100) }}
+            </span>
+          </div>
+
+          <div v-if="account.limit > 0" class="flex justify-between">
+            <span class="text-sm text-secondary-600">Limit</span>
             <span class="text-sm text-secondary-900">
-              {{ maskAccountNumber(account.account_number) }}
+              {{ formatCurrency(account.limit / 100) }}
             </span>
           </div>
 
@@ -72,21 +74,11 @@
           </div>
         </div>
 
-        <div class="mt-4 pt-4 border-t border-secondary-200">
-          <div class="flex space-x-2">
-            <button
-              @click="viewTransactions(account)"
-              class="flex-1 px-3 py-2 text-sm text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100"
-            >
-              View Transactions
-            </button>
-            <button
-              @click="transferFunds(account)"
-              class="flex-1 px-3 py-2 text-sm text-secondary-600 bg-secondary-50 rounded-lg hover:bg-secondary-100"
-            >
-              Transfer
-            </button>
-          </div>
+        <div v-if="account.reconcile" class="mt-2">
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+            <CheckCircleIcon class="w-3 h-3 mr-1" />
+            Reconcilable
+          </span>
         </div>
       </div>
 
@@ -131,16 +123,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   BanknotesIcon,
-  CreditCardIcon,
-  BuildingLibraryIcon,
-  PiggyBankIcon,
-  PencilIcon,
-  PlusIcon
+  PlusIcon,
+  CheckCircleIcon
 } from '@heroicons/vue/24/outline'
 import { useProfileData } from '@/composables/useProfileData'
 import { apiClient } from '@/services/api'
+
+const router = useRouter()
 
 // State
 const accounts = ref([])
@@ -156,11 +148,10 @@ async function fetchAccounts() {
   try {
     const response = await apiClient.get('/accounts')
     
-    if (response.data.success) {
-      accounts.value = response.data.data.accounts || []
-      console.log(`Loaded ${accounts.value.length} accounts for profile:`, currentProfile.value?.name)
+    if (response.data) {
+      accounts.value = response.data || []
     } else {
-      console.error('Failed to fetch accounts:', response.data.error)
+      console.error('Failed to fetch accounts')
       accounts.value = []
     }
   } catch (error) {
@@ -171,27 +162,22 @@ async function fetchAccounts() {
   }
 }
 
+
+
 // Actions
 const handleRefresh = () => {
   fetchAccounts()
 }
 
+const selectAccount = (account) => {
+  router.push(`/accounts/${account.id}`)
+}
+
 const createAccount = () => {
-  // Navigate to create account page or open modal
   console.log('Create account for profile:', currentProfile.value?.name)
 }
 
-const editAccount = (account) => {
-  console.log('Edit account:', account.name)
-}
 
-const viewTransactions = (account) => {
-  console.log('View transactions for account:', account.name)
-}
-
-const transferFunds = (account) => {
-  console.log('Transfer funds from account:', account.name)
-}
 
 // Utility functions
 const formatCurrency = (amount) => {
@@ -209,30 +195,23 @@ const formatDate = (date) => {
   })
 }
 
-const maskAccountNumber = (accountNumber) => {
-  if (!accountNumber) return 'N/A'
-  const visible = accountNumber.slice(-4)
-  return `****${visible}`
+const getAccountColorClass = (color) => {
+  const colorMap = {
+    'cp_red': 'bg-red-500',
+    'cp_blue': 'bg-blue-500',
+    'cp_green': 'bg-green-500',
+    'cp_yellow': 'bg-yellow-500',
+    'cp_purple': 'bg-purple-500',
+    'cp_orange': 'bg-orange-500',
+    'cp_pink': 'bg-pink-500',
+    'cp_gray': 'bg-gray-500',
+    'cp_white': 'bg-gray-400'
+  }
+  return colorMap[color] || 'bg-gray-500'
 }
 
-const getAccountTypeColor = (type) => {
-  const colors = {
-    checking: 'bg-blue-500',
-    savings: 'bg-green-500',
-    credit: 'bg-red-500',
-    investment: 'bg-purple-500'
-  }
-  return colors[type] || 'bg-gray-500'
-}
-
-const getAccountIcon = (type) => {
-  const icons = {
-    checking: BanknotesIcon,
-    savings: PiggyBankIcon,
-    credit: CreditCardIcon,
-    investment: BuildingLibraryIcon
-  }
-  return icons[type] || BanknotesIcon
+const getAccountIcon = (icon) => {
+  return `fa-solid fa-${icon} fa-xl`
 }
 
 // Load initial data

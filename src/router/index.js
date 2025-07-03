@@ -60,6 +60,12 @@ const router = createRouter({
           meta: { requiresAuth: true }
         },
         {
+          path: 'accounts/:id',
+          name: 'account-detail',
+          component: () => import('@/views/AccountDetailView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
           path: 'budgets',
           name: 'budgets',
           component: () => import('@/views/BudgetsView.vue'),
@@ -111,13 +117,6 @@ router.beforeEach(async (to, from, next) => {
   const isAuthenticated = authStore.isAuthenticated
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const guestOnly = to.matched.some(record => record.meta.guestOnly)
-  
-  console.log('Navigation Guard:', {
-    to: to.name,
-    isAuthenticated,
-    requiresAuth,
-    guestOnly
-  })
   
   // If route requires authentication and user is not authenticated
   if (requiresAuth && !isAuthenticated) {
