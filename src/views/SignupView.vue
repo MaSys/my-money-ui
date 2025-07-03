@@ -117,16 +117,16 @@
         <div>
           <button
             type="submit"
-            :disabled="loading || passwordMismatch || !form.acceptTerms"
+            :disabled="isLoading || passwordMismatch || !form.acceptTerms"
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span v-if="loading" class="mr-2">
+            <span v-if="isLoading" class="mr-2">
               <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            {{ loading ? 'Creating account...' : 'Create account' }}
+            {{ isLoading ? 'Creating account...' : 'Create account' }}
           </button>
         </div>
 
@@ -149,9 +149,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useApi } from '@/composables/useApi'
 
 const router = useRouter()
-const loading = ref(false)
+const authStore = useAuthStore()
+const { execute, isLoading, error } = useApi()
 
 const form = ref({
   firstName: '',
@@ -162,36 +165,80 @@ const form = ref({
   acceptTerms: false
 })
 
+const formErrors = ref({})
+
 const passwordMismatch = computed(() => {
   return form.value.password !== form.value.confirmPassword && form.value.confirmPassword !== ''
 })
 
+const validateForm = () => {
+  const errors = {}
+  
+  if (!form.value.firstName) {
+    errors.firstName = 'First name is required'
+  }
+  
+  if (!form.value.lastName) {
+    errors.lastName = 'Last name is required'
+  }
+  
+  if (!form.value.email) {
+    errors.email = 'Email is required'
+  } else if (!/\S+@\S+\.\S+/.test(form.value.email)) {
+    errors.email = 'Please enter a valid email address'
+  }
+  
+  if (!form.value.password) {
+    errors.password = 'Password is required'
+  } else if (form.value.password.length < 6) {
+    errors.password = 'Password must be at least 6 characters'
+  }
+  
+  if (!form.value.confirmPassword) {
+    errors.confirmPassword = 'Please confirm your password'
+  } else if (form.value.password !== form.value.confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match'
+  }
+  
+  if (!form.value.acceptTerms) {
+    errors.acceptTerms = 'You must accept the terms and conditions'
+  }
+  
+  formErrors.value = errors
+  return Object.keys(errors).length === 0
+}
+
 const handleSignup = async () => {
-  if (passwordMismatch.value || !form.value.acceptTerms) return
+  if (!validateForm()) return
   
-  loading.value = true
+  const userData = {
+    firstName: form.value.firstName,
+    lastName: form.value.lastName,
+    email: form.value.email,
+    password: form.value.password,
+    confirmPassword: form.value.confirmPassword
+  }
   
-  try {
-    // Simulate API call for user registration
-    console.log('Creating account with:', {
-      firstName: form.value.firstName,
-      lastName: form.value.lastName,
-      email: form.value.email
-    })
-    
-    // Simulate successful account creation
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Show success message (you can replace this with a toast notification)
-    alert('Account created successfully! Please log in.')
-    
-    // Redirect to login page
-    router.push('/login')
-  } catch (error) {
-    console.error('Signup failed:', error)
-    alert('Signup failed: ' + error.message)
-  } finally {
-    loading.value = false
+  const result = await execute(
+    () => authStore.register(userData),
+    {
+      onSuccess: (userData) => {
+        // Redirect to dashboard after successful registration
+        router.push('/dashboard')
+      },
+      onError: (error) => {
+        // Handle specific validation errors from API
+        if (error.errors) {
+          formErrors.value = error.errors
+        } else {
+          alert('Registration failed: ' + error.error)
+        }
+      }
+    }
+  )
+  
+  if (!result.success) {
+    console.error('Registration failed:', result.error)
   }
 }
 </script> 

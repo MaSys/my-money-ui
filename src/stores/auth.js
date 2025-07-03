@@ -1,93 +1,118 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { authService } from '@/services/authService'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const token = ref(localStorage.getItem('authToken') || null)
-  
-  // Computed property to check if user is authenticated
-  const isAuthenticated = computed(() => {
-    return !!token.value && !!user.value
-  })
-  
-  // Login function
+
+  const isAuthenticated = computed(() => !!token.value)
+
   const login = async (credentials) => {
     try {
-      // Simulate API call - replace with your actual API endpoint
-      console.log('Logging in with:', credentials)
+      const response = await authService.login(credentials)
       
-      // Simulate successful login
-      const mockUser = {
-        id: 1,
-        name: 'John Doe',
-        email: credentials.email
+      if (response.success) {
+        const { email: email, user_id: userId, token: authToken } = response.data
+        
+        const userData = { email, userId }
+        user.value = userData
+        token.value = authToken
+        localStorage.setItem('authToken', authToken)
+        localStorage.setItem('user', JSON.stringify(userData))
+        
+        return { success: true, user: userData }
+      } else {
+        return { success: false, error: response.error, errors: response.errors }
       }
-      const mockToken = 'mock-jwt-token-' + Date.now()
-      
-      // Set user and token
-      user.value = mockUser
-      token.value = mockToken
-      
-      // Store token in localStorage for persistence
-      localStorage.setItem('authToken', mockToken)
-      localStorage.setItem('user', JSON.stringify(mockUser))
-      
-      return { success: true, user: mockUser }
     } catch (error) {
-      console.error('Login failed:', error)
       return { success: false, error: error.message }
     }
   }
-  
-  // Logout function
-  const logout = () => {
-    user.value = null
-    token.value = null
-    localStorage.removeItem('authToken')
-    localStorage.removeItem('user')
-  }
-  
-  // Initialize authentication state from localStorage
-  const initAuth = () => {
-    const savedToken = localStorage.getItem('authToken')
-    const savedUser = localStorage.getItem('user')
-    
-    if (savedToken && savedUser) {
-      try {
-        token.value = savedToken
-        user.value = JSON.parse(savedUser)
-      } catch (error) {
-        console.error('Failed to restore auth state:', error)
-        logout() // Clear invalid data
-      }
-    }
-  }
-  
-  // Check if token is valid (you can add API call to verify)
-  const checkAuthStatus = async () => {
-    if (!token.value) return false
-    
+
+  const register = async (userData) => {
     try {
-      // Simulate API call to verify token
-      // Replace with your actual token verification endpoint
-      console.log('Verifying token...')
+      const response = await authService.register(userData)
       
-      // For demo purposes, assume token is valid
-      return true
+      if (response.success) {
+        const { user: newUser, token: authToken } = response.data
+        
+        user.value = newUser
+        token.value = authToken
+        localStorage.setItem('authToken', authToken)
+        localStorage.setItem('user', JSON.stringify(newUser))
+        
+        return { success: true, user: newUser }
+      } else {
+        return { success: false, error: response.error, errors: response.errors }
+      }
     } catch (error) {
-      console.error('Token verification failed:', error)
-      logout() // Clear invalid token
-      return false
+      return { success: false, error: error.message }
     }
   }
-  
+
+  const logout = async () => {
+    try {
+      // Call API to logout (optional - for session cleanup)
+      await authService.logout()
+    } catch (error) {
+      console.warn('Logout API call failed:', error)
+    } finally {
+      // Always clear local state
+      user.value = null
+      token.value = null
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('user')
+    }
+  }
+
+  const resetPassword = async (email) => {
+    try {
+      const response = await authService.resetPassword(email)
+      return response
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  }
+
+  const verifyToken = async () => {
+    try {
+      const response = await authService.verifyToken()
+      
+      if (response.success) {
+        user.value = response.data.user
+        return { success: true, user: response.data.user }
+      } else {
+        // Token invalid, clear auth
+        logout()
+        return { success: false, error: response.error }
+      }
+    } catch (error) {
+      // Token invalid, clear auth
+      logout()
+      return { success: false, error: error.message }
+    }
+  }
+
+  const initAuth = async () => {
+    const storedUser = localStorage.getItem('user')
+    if (storedUser && token.value) {
+      user.value = JSON.parse(storedUser)
+      
+      // Optionally verify token with server
+      // await verifyToken()
+    }
+  }
+
   return {
     user,
     token,
     isAuthenticated,
     login,
+    register,
     logout,
-    initAuth,
-    checkAuthStatus
+    resetPassword,
+    verifyToken,
+    initAuth
   }
 }) 

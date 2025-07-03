@@ -33,16 +33,16 @@
         <div>
           <button
             type="submit"
-            :disabled="loading"
+            :disabled="isLoading"
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span v-if="loading" class="mr-2">
+            <span v-if="isLoading" class="mr-2">
               <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            {{ loading ? 'Sending...' : 'Send reset link' }}
+            {{ isLoading ? 'Sending...' : 'Send reset link' }}
           </button>
         </div>
 
@@ -91,23 +91,46 @@
 <script setup>
 import { ref } from 'vue'
 import { CheckIcon } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/auth'
+import { useApi } from '@/composables/useApi'
 
-const loading = ref(false)
+const authStore = useAuthStore()
+const { execute, isLoading, error } = useApi()
+
 const emailSent = ref(false)
 const email = ref('')
 
-const handleResetPassword = async () => {
-  loading.value = true
+const validateEmail = () => {
+  if (!email.value) {
+    alert('Please enter your email address')
+    return false
+  }
   
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    emailSent.value = true
-  } catch (error) {
-    console.error('Reset password failed:', error)
-  } finally {
-    loading.value = false
+  if (!/\S+@\S+\.\S+/.test(email.value)) {
+    alert('Please enter a valid email address')
+    return false
+  }
+  
+  return true
+}
+
+const handleResetPassword = async () => {
+  if (!validateEmail()) return
+  
+  const result = await execute(
+    () => authStore.resetPassword(email.value),
+    {
+      onSuccess: (data) => {
+        emailSent.value = true
+      },
+      onError: (error) => {
+        alert('Reset password failed: ' + error.error)
+      }
+    }
+  )
+  
+  if (!result.success) {
+    console.error('Reset password failed:', result.error)
   }
 }
 </script> 

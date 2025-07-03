@@ -25,7 +25,7 @@
               type="email"
               autocomplete="email"
               required
-              v-model="form.email"
+              v-model="formData.email"
               class="mt-1 appearance-none relative block w-full px-3 py-2 border border-secondary-300 placeholder-secondary-500 text-secondary-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
               placeholder="Enter your email"
             />
@@ -41,7 +41,7 @@
               type="password"
               autocomplete="current-password"
               required
-              v-model="form.password"
+              v-model="formData.password"
               class="mt-1 appearance-none relative block w-full px-3 py-2 border border-secondary-300 placeholder-secondary-500 text-secondary-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
               placeholder="Enter your password"
             />
@@ -54,7 +54,7 @@
               id="remember-me"
               name="remember-me"
               type="checkbox"
-              v-model="form.rememberMe"
+              v-model="formData.rememberMe"
               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
             />
             <label for="remember-me" class="ml-2 block text-sm text-secondary-900">
@@ -75,16 +75,16 @@
         <div>
           <button
             type="submit"
-            :disabled="loading"
+            :disabled="isLoading"
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span v-if="loading" class="mr-2">
+            <span v-if="isLoading" class="mr-2">
               <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
-            {{ loading ? 'Signing in...' : 'Sign in' }}
+            {{ isLoading ? 'Signing in...' : 'Sign in' }}
           </button>
         </div>
 
@@ -105,45 +105,68 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+import { useApi } from '@/composables/useApi'
 
 const router = useRouter()
-const loading = ref(false)
+const authStore = useAuthStore()
+const { execute, isLoading, error } = useApi()
 
-const form = ref({
+const formData = ref({
   email: '',
   password: '',
   rememberMe: false
 })
 
-const handleLogin = async () => {
-  loading.value = true
+const showPassword = ref(false)
+const formErrors = ref({})
+
+const validateForm = () => {
+  const errors = {}
   
-  try {
-    // Use auth store to login
-    const authStore = useAuthStore()
-    const result = await authStore.login({
-      email: form.value.email,
-      password: form.value.password,
-      rememberMe: form.value.rememberMe
-    })
-    
-    if (result.success) {
-      // Check if there was a redirect query parameter
-      const redirectPath = router.currentRoute.value.query.redirect || '/'
-      router.push(redirectPath)
-    } else {
-      console.error('Login failed:', result.error)
-      // You can add error handling UI here
-      alert('Login failed: ' + (result.error || 'Unknown error'))
-    }
-  } catch (error) {
-    console.error('Login failed:', error)
-    alert('Login failed: ' + error.message)
-  } finally {
-    loading.value = false
+  if (!formData.value.email) {
+    errors.email = 'Email is required'
+  } else if (!/\S+@\S+\.\S+/.test(formData.value.email)) {
+    errors.email = 'Please enter a valid email address'
   }
+  
+  if (!formData.value.password) {
+    errors.password = 'Password is required'
+  }
+  
+  formErrors.value = errors
+  return Object.keys(errors).length === 0
+}
+
+const handleLogin = async () => {
+  if (!validateForm()) return
+  
+  const result = await execute(
+    () => authStore.login(formData.value),
+    {
+      onSuccess: (userData) => {
+        // Redirect to dashboard or intended page
+        const redirectTo = router.currentRoute.value.query.redirect || '/dashboard'
+        router.push(redirectTo)
+      },
+      onError: (error) => {
+        // Handle specific validation errors from API
+        if (error.errors) {
+          formErrors.value = error.errors
+        }
+      }
+    }
+  )
+  
+  if (!result.success) {
+    console.error('Login failed:', result.error)
+  }
+}
+
+const togglePassword = () => {
+  showPassword.value = !showPassword.value
 }
 </script> 
