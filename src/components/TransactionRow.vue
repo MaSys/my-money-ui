@@ -85,6 +85,17 @@
             <CheckIcon class="w-3 h-3" />
           </button>
 
+          <!-- Mark as Cleared Button -->
+          <button
+            v-if="transaction.paid && transaction.account.reconcile && !transaction.cleared"
+            @click="handleMarkAsCleared"
+            :disabled="isClearing"
+            class="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 disabled:opacity-50 transition-colors"
+            title="Mark as Cleared"
+          >
+            <CheckCircleIcon class="w-3 h-3" />
+          </button>
+
           <!-- Edit Button -->
           <button
             @click="handleEdit"
@@ -132,6 +143,7 @@ const emit = defineEmits(['transaction-updated', 'transaction-deleted'])
 // State
 const isUpdating = ref(false)
 const isDeleting = ref(false)
+const isClearing = ref(false)
 
 // Utility functions
 const formatCurrency = (amount) => {
@@ -217,6 +229,27 @@ const handleMarkAsPaid = async () => {
     console.error('Error marking transaction as paid:', error)
   } finally {
     isUpdating.value = false
+  }
+}
+
+const handleMarkAsCleared = async () => {
+  if (isClearing.value) return
+
+  isClearing.value = true
+
+  try {
+    const response = await apiClient.patch(`/transactions/${props.transaction.id}`, {
+      cleared: true
+    })
+
+    if (response.data) {
+      // Emit event to parent to refresh data
+      emit('transaction-updated', response.data)
+    }
+  } catch (error) {
+    console.error('Error marking transaction as cleared:', error)
+  } finally {
+    isClearing.value = false
   }
 }
 
