@@ -46,6 +46,18 @@ const router = createRouter({
           name: 'dashboard',
           component: DashboardView,
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'transactions',
+          name: 'transactions',
+          component: () => import('@/views/TransactionsView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'accounts',
+          name: 'accounts',
+          component: () => import('@/views/AccountsView.vue'),
+          meta: { requiresAuth: true }
         }
         // Add more protected routes here as needed
       ]
@@ -87,7 +99,7 @@ router.beforeEach(async (to, from, next) => {
   
   // Initialize auth state if not already done
   if (!authStore.user && localStorage.getItem('authToken')) {
-    authStore.initAuth()
+    await authStore.initAuth()
   }
   
   const isAuthenticated = authStore.isAuthenticated

@@ -14,16 +14,9 @@ app.use(router)
 
 // Initialize stores
 const authStore = useAuthStore()
-const profileStore = useProfileStore()
 
 // Initialize authentication state after Pinia is set up
+// This will also initialize profiles if user is authenticated
 authStore.initAuth()
-
-// Initialize profiles if user is authenticated
-if (authStore.isAuthenticated) {
-  profileStore.fetchProfiles().then(() => {
-    profileStore.initializeProfile()
-  })
-}
 
 app.mount('#app') 

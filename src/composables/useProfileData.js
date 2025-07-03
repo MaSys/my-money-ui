@@ -1,7 +1,56 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useProfileStore } from '@/stores/profile'
 
-export function useProfileData() {
+export function useProfileData(refreshCallback) {
+  const profileStore = useProfileStore()
+  const isRefreshing = ref(false)
+
+  // Watch for profile changes and automatically refresh
+  const stopWatching = watch(
+    () => profileStore.currentProfile?.id,
+    async (newProfileId, oldProfileId) => {
+      // Skip the initial call and only trigger on actual changes
+      if (oldProfileId !== undefined && newProfileId !== oldProfileId && refreshCallback) {
+        console.log('Profile changed, refreshing data...')
+        await refreshData()
+      }
+    }
+  )
+
+  // Refresh data function
+  const refreshData = async () => {
+    if (isRefreshing.value || !refreshCallback) return
+    
+    isRefreshing.value = true
+    
+    try {
+      await refreshCallback()
+      console.log('Data refreshed for profile:', profileStore.currentProfile?.name)
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    } finally {
+      isRefreshing.value = false
+    }
+  }
+
+  // Manual refresh function
+  const manualRefresh = () => refreshData()
+
+  // Clean up watcher on unmount
+  onUnmounted(() => {
+    stopWatching()
+  })
+
+  return {
+    isRefreshing,
+    refreshData,
+    manualRefresh,
+    currentProfile: profileStore.currentProfile
+  }
+}
+
+// Alternative composable for multiple refresh functions
+export function useMultipleProfileData() {
   const profileStore = useProfileStore()
   const isRefreshing = ref(false)
   const refreshCallbacks = ref([])
@@ -10,6 +59,25 @@ export function useProfileData() {
   const onProfileSwitch = (callback) => {
     refreshCallbacks.value.push(callback)
   }
+
+  // Remove a callback
+  const offProfileSwitch = (callback) => {
+    const index = refreshCallbacks.value.indexOf(callback)
+    if (index > -1) {
+      refreshCallbacks.value.splice(index, 1)
+    }
+  }
+
+  // Watch for profile changes
+  const stopWatching = watch(
+    () => profileStore.currentProfile?.id,
+    async (newProfileId, oldProfileId) => {
+      // Skip the initial call and only trigger on actual changes
+      if (oldProfileId !== undefined && newProfileId !== oldProfileId) {
+        await refreshAllData()
+      }
+    }
+  )
 
   // Refresh all registered data
   const refreshAllData = async () => {
@@ -38,27 +106,16 @@ export function useProfileData() {
     }
   }
 
-  // Handle profile switch event
-  const handleProfileSwitch = (event) => {
-    const { newProfile, oldProfile } = event.detail
-    console.log('Profile switched:', oldProfile?.name, '→', newProfile?.name)
-    
-    // Refresh all data after a short delay to ensure API context is updated
-    setTimeout(refreshAllData, 100)
-  }
-
-  // Setup event listeners
-  onMounted(() => {
-    window.addEventListener('profile-switched', handleProfileSwitch)
-  })
-
+  // Clean up on unmount
   onUnmounted(() => {
-    window.removeEventListener('profile-switched', handleProfileSwitch)
+    stopWatching()
+    refreshCallbacks.value = []
   })
 
   return {
     isRefreshing,
     onProfileSwitch,
+    offProfileSwitch,
     refreshAllData,
     currentProfile: profileStore.currentProfile
   }

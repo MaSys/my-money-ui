@@ -8,6 +8,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'x-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
   },
 })
 
@@ -23,7 +24,7 @@ api.interceptors.request.use(
     // Add profile context if available
     const currentProfileId = localStorage.getItem('currentProfileId')
     if (currentProfileId) {
-      config.headers['X-Current-Profile'] = currentProfileId
+      config.headers['X-PROFILE-ID'] = currentProfileId
     }
 
     // Add CSRF token for Rails (if using cookies)
@@ -80,7 +81,8 @@ api.interceptors.response.use(
           // Unauthorized - clear auth and redirect to login
           console.warn('Authentication failed - redirecting to login')
           const authStore = useAuthStore()
-          authStore.logout()
+          // TODO: fix this
+          // authStore.logout()
           // Only redirect if not already on auth pages
           if (!window.location.pathname.includes('login') && 
               !window.location.pathname.includes('signup') && 

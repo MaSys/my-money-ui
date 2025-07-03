@@ -152,7 +152,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import {
   BanknotesIcon,
   ArrowUpIcon,
@@ -163,6 +163,18 @@ import {
   FilmIcon,
   TruckIcon
 } from '@heroicons/vue/24/outline'
+import { useDashboardStore } from '@/stores/dashboard'
+import { useProfileData } from '@/composables/useProfileData'
+
+const dashboardStore = useDashboardStore()
+
+// Set up automatic data refresh when profile changes
+const { isRefreshing, currentProfile } = useProfileData(() => dashboardStore.refreshData())
+
+// Load initial data
+onMounted(async () => {
+  await dashboardStore.fetchDashboardData()
+})
 
 const recentTransactions = ref([
   {

@@ -55,17 +55,7 @@ export const profileService = {
     }
   },
 
-  // Switch to profile (update current profile context)
-  async switchProfile(profileId) {
-    try {
-      const response = await apiClient.post('/profiles/switch', {
-        profile_id: profileId
-      })
-      return handleApiResponse(response)
-    } catch (error) {
-      return handleApiError(error)
-    }
-  },
+
 
   // Get profile summary/stats
   async getProfileSummary(profileId) {

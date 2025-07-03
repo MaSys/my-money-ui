@@ -44,7 +44,7 @@ export const useProfileStore = defineStore('profile', () => {
       const response = await profileService.getProfiles()
       
       if (response.success) {
-        profiles.value = response.data.profiles || []
+        profiles.value = response.data || []
         
         // Set current profile if not set and profiles exist
         if (!currentProfile.value && profiles.value.length > 0) {
@@ -69,34 +69,21 @@ export const useProfileStore = defineStore('profile', () => {
       return { success: true, data: currentProfile.value }
     }
 
-    loading.value = true
-    error.value = null
-    
-    try {
-      // Call API to switch profile context
-      const response = await profileService.switchProfile(profileId)
-      
-      if (response.success) {
-        // Update current profile
-        const newProfile = profiles.value.find(p => p.id === profileId)
-        if (newProfile) {
-          currentProfile.value = newProfile
-          
-          // Store in localStorage for persistence
-          localStorage.setItem('currentProfileId', profileId.toString())
-          
-          return { success: true, data: newProfile }
-        }
-      }
-      
-      error.value = response.error
-      return { success: false, error: response.error }
-    } catch (err) {
-      error.value = err.message
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
+    // Find the profile to switch to
+    const newProfile = profiles.value.find(p => p.id === profileId)
+    if (!newProfile) {
+      return { success: false, error: 'Profile not found' }
     }
+
+    // Update current profile locally
+    currentProfile.value = newProfile
+    
+    // Store in localStorage for persistence
+    localStorage.setItem('currentProfileId', profileId.toString())
+    
+    console.log('Profile switched to:', newProfile.name)
+    
+    return { success: true, data: newProfile }
   }
 
   const createProfile = async (profileData) => {
@@ -204,7 +191,15 @@ export const useProfileStore = defineStore('profile', () => {
       const savedProfile = profiles.value.find(p => p.id === parseInt(savedProfileId))
       if (savedProfile) {
         currentProfile.value = savedProfile
+        return
       }
+    }
+    
+    // If no saved profile or saved profile not found, use the first profile
+    if (profiles.value.length > 0 && !currentProfile.value) {
+      const firstProfile = profiles.value.find(p => p.is_default) || profiles.value[0]
+      currentProfile.value = firstProfile
+      localStorage.setItem('currentProfileId', firstProfile.id.toString())
     }
   }
 

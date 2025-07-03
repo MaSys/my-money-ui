@@ -208,8 +208,128 @@ Theme settings are persisted in localStorage and automatically applied on page l
 2. Frontend calls `authService.login()`
 3. API service handles request with interceptors
 4. Success: Token stored, user redirected to dashboard
-5. Error: User sees validation errors
-6. All subsequent requests include auth token automatically
+5. **Profile Initialization**: Automatically fetch user profiles from `/api/v1/profiles`
+6. **Profile Selection**: Set first profile (or default profile) as active in localStorage
+7. **Default Profile Creation**: If no profiles exist, create a default "Personal" profile
+8. Error: User sees validation errors
+9. All subsequent requests include auth token and profile context automatically
+
+## Profile Management Flow
+
+1. **After Login/Signup**: Profiles are automatically fetched and first profile is set as active
+2. **Profile Switching**: User can switch between profiles using the dropdown
+3. **Data Refresh**: When profile is switched, all data (transactions, dashboard, etc.) automatically refreshes
+4. **Profile Context**: All API requests include `X-Current-Profile` header for backend filtering
+5. **Persistence**: Current profile selection is saved in localStorage and restored on page reload
+
+## Expected Rails Response for Profiles
+```javascript
+// GET /api/v1/profiles response
+{
+  "success": true,
+  "data": {
+    "profiles": [
+      {
+        "id": 1,
+        "name": "Personal",
+        "description": "My personal finances",
+        "color": "#3B82F6",
+        "is_default": true,
+        "created_at": "2024-01-01T00:00:00.000Z",
+        "updated_at": "2024-01-01T00:00:00.000Z"
+      },
+      {
+        "id": 2,
+        "name": "Business",
+        "description": "Business expenses and income",
+        "color": "#10B981",
+        "is_default": false,
+        "created_at": "2024-01-01T00:00:00.000Z",
+        "updated_at": "2024-01-01T00:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+## Profile Switching Architecture
+
+### **Watcher-Based Data Refresh**
+
+Instead of making API calls to switch profiles, the system uses Vue watchers to automatically refresh view data when the profile changes:
+
+1. **Profile Selection**: User selects different profile from dropdown
+2. **Local State Update**: Profile store updates `currentProfile` and localStorage
+3. **Watcher Triggers**: Views with `useProfileData` composable automatically detect the change
+4. **Data Refresh**: Each view refreshes its specific data (transactions, accounts, etc.)
+5. **Context Headers**: All API requests include `X-Current-Profile` header for backend filtering
+
+### **Implementation Examples**
+
+**Basic View with Auto-Refresh:**
+```vue
+<script setup>
+import { useProfileData } from '@/composables/useProfileData'
+import { transactionService } from '@/services/transactionService'
+
+// Set up automatic refresh when profile changes
+const { isRefreshing, currentProfile } = useProfileData(fetchTransactions)
+
+async function fetchTransactions() {
+  // This function will be called automatically when profile changes
+  const response = await transactionService.getTransactions()
+  // Handle response...
+}
+
+onMounted(() => {
+  fetchTransactions() // Initial load
+})
+</script>
+```
+
+**Multiple Refresh Functions:**
+```vue
+<script setup>
+import { useMultipleProfileData } from '@/composables/useProfileData'
+
+const { onProfileSwitch, offProfileSwitch } = useMultipleProfileData()
+
+// Register multiple refresh functions
+onProfileSwitch(fetchTransactions)
+onProfileSwitch(fetchAccounts)
+onProfileSwitch(fetchBudgets)
+
+// Functions will be called automatically when profile changes
+</script>
+```
+
+### **API Context Headers**
+
+All API requests automatically include the current profile context:
+```javascript
+// Headers sent with every request:
+{
+  'Authorization': 'Bearer jwt-token',
+  'X-Current-Profile': '123',  // Current profile ID
+  'Content-Type': 'application/json'
+}
+```
+
+### **Rails Backend Implementation**
+
+Your Rails backend should filter data based on the profile header:
+```ruby
+class TransactionsController < ApplicationController
+  before_action :set_current_profile
+
+  private
+
+  def set_current_profile
+    @current_profile_id = request.headers['X-Current-Profile']
+    # Use this to filter data: Transaction.where(profile_id: @current_profile_id)
+  end
+end
+```
 
 ## Development Best Practices
 
