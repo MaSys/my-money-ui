@@ -1,5 +1,5 @@
 <template>
-  <div 
+  <div
     class="px-6 py-4 hover:bg-secondary-50"
     :class="{ 'opacity-75': !isPaid }"
   >
@@ -21,7 +21,7 @@
             <i :class="getCategoryIcon(transaction.category.icon)"></i>
           </div>
         </div>
-        
+
         <div class="flex-1">
           <div class="flex items-center space-x-2">
             <p class="text-sm font-medium text-secondary-900">
@@ -33,9 +33,9 @@
               class="w-4 h-4 text-green-600"
             />
             <!-- Clock icon for planned transactions -->
-            <ClockIcon 
-              v-if="!isPaid" 
-              class="w-4 h-4 text-blue-500" 
+            <ClockIcon
+              v-if="!isPaid"
+              class="w-4 h-4 text-blue-500"
             />
           </div>
           <div class="flex items-center space-x-2 mt-1">
@@ -55,7 +55,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="text-right">
         <p
           class="text-sm font-medium"
@@ -66,13 +66,48 @@
         <p class="text-xs text-secondary-500">
           {{ formatDayMonth(transaction.due_date) }}
         </p>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-end space-x-1 mt-2">
+          <!-- Mark as Paid Button -->
+          <button
+            v-if="!transaction.paid"
+            @click="handleMarkAsPaid"
+            :disabled="isUpdating"
+            class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50 transition-colors"
+            title="Mark as Paid"
+          >
+            <CheckIcon class="w-3 h-3" />
+          </button>
+
+          <!-- Edit Button -->
+          <button
+            @click="handleEdit"
+            class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            title="Edit Transaction"
+          >
+            <PencilIcon class="w-3 h-3" />
+          </button>
+
+          <!-- Delete Button -->
+          <button
+            @click="handleDelete"
+            :disabled="isDeleting"
+            class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50 transition-colors"
+            title="Delete Transaction"
+          >
+            <TrashIcon class="w-3 h-3" />
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { CheckCircleIcon, ClockIcon } from '@heroicons/vue/24/outline'
+import { ref } from 'vue'
+import { CheckCircleIcon, ClockIcon, CheckIcon, PencilIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { apiClient } from '@/services/api'
 
 // Props
 const props = defineProps({
@@ -85,6 +120,13 @@ const props = defineProps({
     default: true
   }
 })
+
+// Emits
+const emit = defineEmits(['transaction-updated', 'transaction-deleted'])
+
+// State
+const isUpdating = ref(false)
+const isDeleting = ref(false)
 
 // Utility functions
 const formatCurrency = (amount) => {
@@ -127,4 +169,59 @@ const getAccountIcon = (icon) => {
 const getCategoryIcon = (icon) => {
   return `fa-solid fa-${icon} fa-xl`
 }
-</script> 
+
+// Action handlers
+const handleMarkAsPaid = async () => {
+  if (isUpdating.value) return
+
+  isUpdating.value = true
+
+  try {
+    const response = await apiClient.patch(`/transactions/${props.transaction.id}`, {
+      paid: true,
+      due_date: new Date()
+    })
+
+    if (response.data) {
+      // Emit event to parent to refresh data
+      emit('transaction-updated', response.data)
+    }
+  } catch (error) {
+    console.error('Error marking transaction as paid:', error)
+  } finally {
+    isUpdating.value = false
+  }
+}
+
+const handleEdit = () => {
+  // Placeholder for edit functionality
+  console.log('Edit transaction:', props.transaction.id)
+  // TODO: Implement edit functionality
+  // This could open a modal or navigate to an edit page
+}
+
+const handleDelete = async () => {
+  if (isDeleting.value) return
+
+  // Confirm deletion
+  if (!confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) {
+    return
+  }
+
+  isDeleting.value = true
+
+  try {
+    const response = await apiClient.delete(`/transactions/${props.transaction.id}`)
+
+    if (response.status === 200 || response.status === 204) {
+      // Emit event to parent to remove transaction from list
+      emit('transaction-deleted', props.transaction.id)
+    }
+  } catch (error) {
+    console.error('Error deleting transaction:', error)
+    alert('Failed to delete transaction. Please try again.')
+  } finally {
+    isDeleting.value = false
+  }
+}
+</script>

@@ -42,6 +42,8 @@
           :key="transaction.id"
           :transaction="transaction"
           :is-paid="false"
+          @transaction-updated="handleTransactionUpdated"
+          @transaction-deleted="handleTransactionDeleted"
         />
 
         <div v-if="loadingPlanned" class="px-6 py-8 text-center">
@@ -77,6 +79,8 @@
           :key="transaction.id"
           :transaction="transaction"
           :is-paid="true"
+          @transaction-updated="handleTransactionUpdated"
+          @transaction-deleted="handleTransactionDeleted"
         />
 
         <div v-if="loadingPaid" class="px-6 py-8 text-center">
@@ -197,6 +201,31 @@ const formatDate = (date) => {
     month: 'long',
     day: 'numeric'
   })
+}
+
+// Event handlers
+const handleTransactionUpdated = (updatedTransaction) => {
+  // Find and update the transaction in the appropriate array
+  const paidIndex = paidTransactions.value.findIndex(t => t.id === updatedTransaction.id)
+  const plannedIndex = plannedTransactions.value.findIndex(t => t.id === updatedTransaction.id)
+  
+  if (paidIndex !== -1) {
+    paidTransactions.value[paidIndex] = updatedTransaction
+  } else if (plannedIndex !== -1) {
+    // If a planned transaction was marked as paid, move it to paid transactions
+    if (updatedTransaction.paid) {
+      plannedTransactions.value.splice(plannedIndex, 1)
+      paidTransactions.value.push(updatedTransaction)
+    } else {
+      plannedTransactions.value[plannedIndex] = updatedTransaction
+    }
+  }
+}
+
+const handleTransactionDeleted = (transactionId) => {
+  // Remove the transaction from both arrays
+  paidTransactions.value = paidTransactions.value.filter(t => t.id !== transactionId)
+  plannedTransactions.value = plannedTransactions.value.filter(t => t.id !== transactionId)
 }
 
 // Load initial data
