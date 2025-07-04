@@ -18,6 +18,7 @@
           <PlusIcon class="w-4 h-4 mr-2 inline" />
           Create Transaction
         </button>
+        <!--
         <button
           @click="handleRefresh"
           :disabled="isRefreshing"
@@ -26,11 +27,12 @@
           <span v-if="isRefreshing">Refreshing...</span>
           <span v-else>Refresh</span>
         </button>
+        -->
       </div>
     </div>
 
     <!-- Planned Transactions Section -->
-    <div class="bg-white rounded-lg shadow">
+    <div class="bg-white rounded-lg shadow" v-if="plannedTransactions.length">
       <div class="px-6 py-4 border-b border-secondary-200">
         <div class="flex justify-between items-center">
           <h2 class="text-lg font-medium text-secondary-900">
@@ -138,7 +140,13 @@ async function fetchPaidTransactions() {
   loadingPaid.value = true
   
   try {
-    const today = new Date().toISOString().slice(0, 10)
+    const date = new Date()
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+
+    const today = `${year}-${month}-${day}`
+
     const response = await apiClient.get(`/transactions`, {
       params: {
         start_date: today,

@@ -2,6 +2,7 @@
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <h1 class="text-2xl font-bold text-secondary-900">Accounts</h1>
+      <!--
       <button
         @click="handleRefresh"
         :disabled="isRefreshing"
@@ -10,6 +11,7 @@
         <span v-if="isRefreshing">Refreshing...</span>
         <span v-else>Refresh</span>
       </button>
+      -->
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
