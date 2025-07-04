@@ -337,10 +337,7 @@ function applyTemplate() {
   const template = templates.value.find(t => t.id === selectedTemplate.value)
   if (!template) return
   
-  // Populate form fields from template
-  // Amount comes from template.amount if it exists, otherwise from template.attrs.amount
   const amount = Number(template.amount) || 0
-  
   formData.value.account_id = template.account_id || ''
   formData.value.category_id = template.category_id || ''
   formData.value.transaction_type = template.transaction_type || 'expense'
@@ -348,10 +345,9 @@ function applyTemplate() {
   formData.value.tags = template.tag_list || []
   
   // Convert amount from cents to dollars if needed
+  formData.value.amount = ''
   if (amount && typeof amount === 'number' && amount > 0) {
     formData.value.amount = (amount / 100).toFixed(2)
-  } else {
-    formData.value.amount = ''
   }
   
   // Reset template selection

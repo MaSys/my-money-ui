@@ -82,6 +82,18 @@ const router = createRouter({
           name: 'budgets',
           component: () => import('@/views/BudgetsView.vue'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'reports/projected-balance',
+          name: 'projected-balance',
+          component: () => import('@/views/ProjectedBalanceView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'test/chart',
+          name: 'chart-test',
+          component: () => import('@/views/ChartTestView.vue'),
+          meta: { requiresAuth: true }
         }
         // Add more protected routes here as needed
       ]

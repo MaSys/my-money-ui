@@ -64,14 +64,14 @@
           Budgets
         </router-link>
 
-        <a
-          href="#"
-          class="flex items-center px-4 py-3 text-sm font-medium text-secondary-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors opacity-50 cursor-not-allowed"
+        <router-link
+          to="/reports/projected-balance"
+          class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
+          :class="$route.name === 'projected-balance' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
         >
           <ChartBarIcon class="mr-3 h-5 w-5" />
-          Analytics
-          <span class="ml-auto text-xs bg-secondary-200 text-secondary-600 px-2 py-1 rounded">Soon</span>
-        </a>
+          Reports
+        </router-link>
 
         <router-link
           to="/accounts"
