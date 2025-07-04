@@ -285,18 +285,28 @@ const createChart = () => {
       type: 'line',
       data: {
         labels: chartLabels,
-        datasets: [{
-          label: 'Projected Balance',
-          data: balances,
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.1,
-          fill: true
-        }]
+              datasets: [{
+        label: 'Projected Balance',
+        data: balances,
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.1,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 8,
+        pointHitRadius: 15, // Larger hit area for easier hovering
+        pointBackgroundColor: 'rgb(59, 130, 246)',
+        pointBorderColor: 'white',
+        pointBorderWidth: 2
+      }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
         scales: {
           y: {
             beginAtZero: false,
@@ -317,7 +327,12 @@ const createChart = () => {
         },
         plugins: {
           tooltip: {
+            mode: 'index',
+            intersect: false,
             callbacks: {
+              title: function(context) {
+                return context[0].label
+              },
               label: function(context) {
                 return 'Balance: ' + new Intl.NumberFormat('en-US', {
                   style: 'currency',
