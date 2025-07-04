@@ -65,15 +65,6 @@
         </router-link>
 
         <router-link
-          to="/reports/projected-balance"
-          class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
-          :class="$route.name === 'projected-balance' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
-        >
-          <ChartBarIcon class="mr-3 h-5 w-5" />
-          Reports
-        </router-link>
-
-        <router-link
           to="/accounts"
           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
           :class="$route.name === 'accounts' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
@@ -89,6 +80,29 @@
           <CogIcon class="mr-3 h-5 w-5" />
           Settings
         </a>
+
+        <!-- Reports Menu -->
+        <div class="space-y-1">
+          <div class="text-xs font-semibold text-secondary-500 uppercase tracking-wide px-4">
+            Reports
+          </div>
+          <router-link
+            to="/reports/projected-balance"
+            class="flex items-center px-4 py-2 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            :class="$route.name === 'projected-balance' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
+          >
+            <ChartBarIcon class="mr-3 h-4 w-4" />
+            Projected Balance
+          </router-link>
+          <router-link
+            to="/reports/income-expenses"
+            class="flex items-center px-4 py-2 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            :class="$route.name === 'income-expenses' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
+          >
+            <PresentationChartBarIcon class="mr-3 h-4 w-4" />
+            Income vs Expenses
+          </router-link>
+        </div>
       </nav>
 
       <!-- Theme Switcher -->
@@ -131,7 +145,8 @@ import {
   CogIcon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
-  PresentationChartLineIcon
+  PresentationChartLineIcon,
+  PresentationChartBarIcon
 } from '@heroicons/vue/24/outline'
 import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
 import ProfileSwitcher from '@/components/ProfileSwitcher.vue'

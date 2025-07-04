@@ -90,9 +90,9 @@ const router = createRouter({
           meta: { requiresAuth: true }
         },
         {
-          path: 'test/chart',
-          name: 'chart-test',
-          component: () => import('@/views/ChartTestView.vue'),
+          path: 'reports/income-expenses',
+          name: 'income-expenses',
+          component: () => import('@/views/IncomeExpensesView.vue'),
           meta: { requiresAuth: true }
         }
         // Add more protected routes here as needed
