@@ -78,12 +78,6 @@ const router = createRouter({
           meta: { requiresAuth: true }
         },
         {
-          path: 'budgets',
-          name: 'budgets',
-          component: () => import('@/views/BudgetsView.vue'),
-          meta: { requiresAuth: true }
-        },
-        {
           path: 'reports/projected-balance',
           name: 'projected-balance',
           component: () => import('@/views/ProjectedBalanceView.vue'),

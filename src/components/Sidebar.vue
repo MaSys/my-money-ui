@@ -56,15 +56,6 @@
         </router-link>
 
         <router-link
-          to="/budgets"
-          class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
-          :class="$route.name === 'budgets' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
-        >
-          <PresentationChartLineIcon class="mr-3 h-5 w-5" />
-          Budgets
-        </router-link>
-
-        <router-link
           to="/accounts"
           class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
           :class="$route.name === 'accounts' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
