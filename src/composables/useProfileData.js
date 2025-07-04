@@ -11,7 +11,6 @@ export function useProfileData(refreshCallback) {
     async (newProfileId, oldProfileId) => {
       // Skip the initial call and only trigger on actual changes
       if (oldProfileId !== undefined && newProfileId !== oldProfileId && refreshCallback) {
-        console.log('Profile changed, refreshing data...')
         await refreshData()
       }
     }
@@ -25,7 +24,6 @@ export function useProfileData(refreshCallback) {
     
     try {
       await refreshCallback()
-      console.log('Data refreshed for profile:', profileStore.currentProfile?.name)
     } catch (error) {
       console.error('Error refreshing data:', error)
     } finally {
@@ -97,8 +95,6 @@ export function useMultipleProfileData() {
       })
       
       await Promise.all(promises)
-      
-      console.log('All profile data refreshed successfully')
     } catch (error) {
       console.error('Error refreshing profile data:', error)
     } finally {

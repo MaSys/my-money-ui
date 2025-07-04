@@ -228,7 +228,6 @@ async function fetchBudgets() {
     
     if (response.data.success) {
       budgetCategories.value = response.data.data.budgets || []
-      console.log(`Loaded ${budgetCategories.value.length} budget categories for profile:`, currentProfile.value?.name)
     } else {
       console.error('Failed to fetch budgets:', response.data.error)
       budgetCategories.value = []
@@ -248,7 +247,6 @@ async function fetchBudgetActivity() {
     
     if (response.data.success) {
       recentActivity.value = response.data.data.activities || []
-      console.log(`Loaded ${recentActivity.value.length} budget activities for profile:`, currentProfile.value?.name)
     } else {
       console.error('Failed to fetch budget activity:', response.data.error)
       recentActivity.value = []

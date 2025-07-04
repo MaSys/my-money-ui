@@ -139,7 +139,6 @@ const handleSwitchProfile = async (profileId) => {
   if (result.success) {
     closeDropdown()
     // Optionally show success message
-    console.log('Profile switched successfully')
   } else {
     console.error('Failed to switch profile:', result.error)
     // Optionally show error message

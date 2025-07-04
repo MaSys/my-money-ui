@@ -150,7 +150,6 @@ router.beforeEach(async (to, from, next) => {
   
   // If route requires authentication and user is not authenticated
   if (requiresAuth && !isAuthenticated) {
-    console.log('Redirecting to login - authentication required')
     next({
       name: 'login',
       query: { redirect: to.fullPath } // Save intended destination
@@ -160,7 +159,6 @@ router.beforeEach(async (to, from, next) => {
   
   // If route is guest-only (login, signup, etc.) and user is authenticated
   if (guestOnly && isAuthenticated) {
-    console.log('Redirecting to dashboard - user already authenticated')
     next({ name: 'dashboard' })
     return
   }

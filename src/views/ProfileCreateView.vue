@@ -114,7 +114,6 @@ const handleCreateProfile = async () => {
     () => profileStore.createProfile(form.value),
     {
       onSuccess: (profile) => {
-        console.log('Profile created successfully:', profile)
         router.push('/dashboard')
       },
       onError: (error) => {

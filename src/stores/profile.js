@@ -201,25 +201,6 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  const debugProfileRestore = () => {
-    const savedId = localStorage.getItem('currentProfileId')
-    console.log('🔍 DEBUG: localStorage currentProfileId:', savedId, 'type:', typeof savedId)
-    console.log('🔍 DEBUG: profiles array:', profiles.value)
-    console.log('🔍 DEBUG: profile IDs and types:', profiles.value.map(p => ({ id: p.id, type: typeof p.id, name: p.name })))
-    console.log('🔍 DEBUG: current profile:', currentProfile.value)
-    
-    if (savedId) {
-      const foundProfile = profiles.value.find(p => p.id === parseInt(savedId))
-      console.log('🔍 DEBUG: parseInt search result:', foundProfile)
-      
-      const foundProfileString = profiles.value.find(p => p.id.toString() === savedId)
-      console.log('🔍 DEBUG: string search result:', foundProfileString)
-      
-      const foundProfileEqual = profiles.value.find(p => p.id == savedId)
-      console.log('🔍 DEBUG: loose equality search result:', foundProfileEqual)
-    }
-  }
-
   const clearProfile = () => {
     profiles.value = []
     currentProfile.value = null
@@ -246,7 +227,6 @@ export const useProfileStore = defineStore('profile', () => {
     updateProfile,
     deleteProfile,
     restoreProfileFromLocalStorage,
-    debugProfileRestore,
     clearProfile
   }
 }) 

@@ -179,8 +179,6 @@ const createAccount = () => {
   console.log('Create account for profile:', currentProfile.value?.name)
 }
 
-
-
 // Utility functions
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US', {

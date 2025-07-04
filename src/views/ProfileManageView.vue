@@ -94,12 +94,7 @@ const profiles = computed(() => profileStore.profileOptions)
 
 // Methods
 const switchToProfile = async (profileId) => {
-  const result = await profileStore.switchProfile(profileId)
-  if (result.success) {
-    console.log('Profile switched successfully')
-  } else {
-    alert('Failed to switch profile: ' + result.error)
-  }
+  await profileStore.switchProfile(profileId)
 }
 
 const editProfile = (profile) => {
@@ -113,12 +108,7 @@ const deleteProfile = async (profile) => {
   }
 
   if (confirm(`Are you sure you want to delete the profile "${profile.name}"? This action cannot be undone.`)) {
-    const result = await profileStore.deleteProfile(profile.id)
-    if (result.success) {
-      console.log('Profile deleted successfully')
-    } else {
-      alert('Failed to delete profile: ' + result.error)
-    }
+    await profileStore.deleteProfile(profile.id)
   }
 }
 
