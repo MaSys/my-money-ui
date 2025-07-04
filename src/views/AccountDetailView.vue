@@ -88,29 +88,43 @@
         </div>
       </div>
 
-      <!-- Cleared Filter (for reconcilable accounts) -->
-      <div v-if="account && account.reconcile" class="flex items-center space-x-4">
-        <label class="flex items-center">
-          <input
-            v-model="showAllTransactions"
-            type="radio"
-            :value="true"
-            @change="applyDateFilter"
-            class="mr-2"
-          />
-          All Transactions
-        </label>
-        <label class="flex items-center">
-          <input
-            v-model="showAllTransactions"
-            type="radio"
-            :value="false"
-            @change="applyDateFilter"
-            class="mr-2"
-          />
-          Not Cleared Only
-        </label>
-      </div>
+              <!-- Cleared Filter (for reconcilable accounts) -->
+        <div v-if="account && account.reconcile" class="flex items-center space-x-6">
+          <label class="flex items-center cursor-pointer group">
+            <div class="relative">
+              <input
+                v-model="showAllTransactions"
+                type="radio"
+                :value="true"
+                @change="applyDateFilter"
+                class="sr-only"
+              />
+              <div class="w-4 h-4 border-2 border-secondary-300 rounded-full group-hover:border-primary-400 transition-colors"
+                   :class="showAllTransactions === true ? 'border-primary-500 bg-primary-500' : ''">
+                <div v-if="showAllTransactions === true" 
+                     class="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+            </div>
+            <span class="ml-3 text-sm font-medium text-secondary-700">All Transactions</span>
+          </label>
+          <label class="flex items-center cursor-pointer group">
+            <div class="relative">
+              <input
+                v-model="showAllTransactions"
+                type="radio"
+                :value="false"
+                @change="applyDateFilter"
+                class="sr-only"
+              />
+              <div class="w-4 h-4 border-2 border-secondary-300 rounded-full group-hover:border-primary-400 transition-colors"
+                   :class="showAllTransactions === false ? 'border-primary-500 bg-primary-500' : ''">
+                <div v-if="showAllTransactions === false" 
+                     class="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+            </div>
+            <span class="ml-3 text-sm font-medium text-secondary-700">Not Cleared Only</span>
+          </label>
+        </div>
     </div>
 
     <!-- Transactions List -->

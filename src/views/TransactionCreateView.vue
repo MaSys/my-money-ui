@@ -40,23 +40,37 @@
           Transaction Type <span class="text-red-500">*</span>
         </label>
         <div class="flex space-x-4">
-          <label class="flex items-center">
-            <input
-              v-model="formData.transaction_type"
-              type="radio"
-              value="expense"
-              class="mr-2"
-            />
-            <span class="text-red-600">Expense</span>
+          <label class="flex items-center cursor-pointer group">
+            <div class="relative">
+              <input
+                v-model="formData.transaction_type"
+                type="radio"
+                value="expense"
+                class="sr-only"
+              />
+              <div class="w-4 h-4 border-2 border-secondary-300 rounded-full group-hover:border-red-400 transition-colors"
+                   :class="formData.transaction_type === 'expense' ? 'border-red-500 bg-red-500' : ''">
+                <div v-if="formData.transaction_type === 'expense'" 
+                     class="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+            </div>
+            <span class="ml-3 text-sm font-medium text-red-600">Expense</span>
           </label>
-          <label class="flex items-center">
-            <input
-              v-model="formData.transaction_type"
-              type="radio"
-              value="income"
-              class="mr-2"
-            />
-            <span class="text-green-600">Income</span>
+          <label class="flex items-center cursor-pointer group">
+            <div class="relative">
+              <input
+                v-model="formData.transaction_type"
+                type="radio"
+                value="income"
+                class="sr-only"
+              />
+              <div class="w-4 h-4 border-2 border-secondary-300 rounded-full group-hover:border-green-400 transition-colors"
+                   :class="formData.transaction_type === 'income' ? 'border-green-500 bg-green-500' : ''">
+                <div v-if="formData.transaction_type === 'income'" 
+                     class="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+            </div>
+            <span class="ml-3 text-sm font-medium text-green-600">Income</span>
           </label>
         </div>
       </div>
@@ -145,30 +159,42 @@
 
       <!-- Transaction Status -->
       <div class="space-y-4">
-        <div class="flex items-center">
-          <input
-            v-model="formData.paid"
-            type="checkbox"
-            class="mr-2"
-          />
-          <label class="text-sm font-medium text-secondary-700">
+        <label class="flex items-center cursor-pointer group">
+          <div class="relative">
+            <input
+              v-model="formData.paid"
+              type="checkbox"
+              class="sr-only"
+            />
+            <div class="w-4 h-4 border-2 border-secondary-300 rounded group-hover:border-primary-400 transition-colors"
+                 :class="formData.paid ? 'border-primary-500 bg-primary-500' : ''">
+              <CheckIcon v-if="formData.paid" class="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            </div>
+          </div>
+          <span class="ml-3 text-sm font-medium text-secondary-700">
             Mark as paid
-          </label>
-        </div>
+          </span>
+        </label>
 
-        <div
+        <label
           v-if="formData.paid && selectedAccount && selectedAccount.reconcile"
-          class="flex items-center"
+          class="flex items-center cursor-pointer group"
         >
-          <input
-            v-model="formData.cleared"
-            type="checkbox"
-            class="mr-2"
-          />
-          <label class="text-sm font-medium text-secondary-700">
+          <div class="relative">
+            <input
+              v-model="formData.cleared"
+              type="checkbox"
+              class="sr-only"
+            />
+            <div class="w-4 h-4 border-2 border-secondary-300 rounded group-hover:border-yellow-400 transition-colors"
+                 :class="formData.cleared ? 'border-yellow-500 bg-yellow-500' : ''">
+              <CheckIcon v-if="formData.cleared" class="w-3 h-3 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            </div>
+          </div>
+          <span class="ml-3 text-sm font-medium text-secondary-700">
             Mark as cleared (reconcilable account)
-          </label>
-        </div>
+          </span>
+        </label>
       </div>
 
       <!-- Form Actions -->
@@ -196,7 +222,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, CheckIcon } from '@heroicons/vue/24/outline'
 import { apiClient } from '@/services/api'
 import { useProfileData } from '@/composables/useProfileData'
 
