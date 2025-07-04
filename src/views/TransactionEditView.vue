@@ -280,10 +280,10 @@ const filteredCategories = computed(() => {
 //  formData.value.category_id = ''
 //})
 
-watch(() => formData.value.account_id, () => {
-  // Reset cleared status when account changes
-  formData.value.cleared = false
-})
+//watch(() => formData.value.account_id, () => {
+//  // Reset cleared status when account changes
+//  formData.value.cleared = false
+//})
 
 // Fetch transaction details
 async function fetchTransaction() {

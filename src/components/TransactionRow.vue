@@ -45,7 +45,7 @@
           </div>
           <div class="flex items-center space-x-2 mt-1">
             <p class="text-xs text-secondary-500">
-              {{ transaction.account.name }}
+              {{ transaction.account.name }} <span v-if="transaction.notes"> - {{ transaction.notes }} </span>
             </p>
             <!-- Tags -->
             <div v-if="transaction.tag_list.length > 0" class="flex space-x-1">

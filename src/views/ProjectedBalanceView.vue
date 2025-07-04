@@ -130,7 +130,7 @@ const { currentProfile } = useProfileData()
 
 // Watch for profile changes to re-load data
 watch(
-  () => currentProfile.value?.id,
+  () => currentProfile?.value?.id,
   async (newProfileId, oldProfileId) => {
     if (newProfileId && newProfileId !== oldProfileId) {
       if (accounts.value.length > 0) {

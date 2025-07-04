@@ -102,6 +102,14 @@
             <PresentationChartBarIcon class="mr-3 h-4 w-4" />
             Income vs Expenses
           </router-link>
+          <router-link
+            to="/reports/transactions"
+            class="flex items-center px-4 py-2 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            :class="$route.name === 'transactions-report' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
+          >
+            <BanknotesIcon class="mr-3 h-4 w-4" />
+            Transactions Report
+          </router-link>
         </div>
       </nav>
 

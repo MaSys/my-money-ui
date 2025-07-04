@@ -94,6 +94,12 @@ const router = createRouter({
           name: 'income-expenses',
           component: () => import('@/views/IncomeExpensesView.vue'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'reports/transactions',
+          name: 'transactions-report',
+          component: () => import('@/views/TransactionsReportView.vue'),
+          meta: { requiresAuth: true }
         }
         // Add more protected routes here as needed
       ]
