@@ -158,21 +158,13 @@
         ></textarea>
       </div>
 
-      <!-- Tags -->
-      <div>
-        <label class="block text-sm font-medium text-secondary-700 mb-2">
-          Tags
-        </label>
-        <input
-          v-model="tagsInput"
-          type="text"
-          placeholder="Enter tags separated by commas"
-          class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
-        />
-        <p class="text-xs text-secondary-500 mt-1">
-          Separate multiple tags with commas (e.g., "food, groceries, essentials")
-        </p>
-      </div>
+             <!-- Tags -->
+       <div>
+         <label class="block text-sm font-medium text-secondary-700 mb-2">
+           Tags
+         </label>
+         <TagSelector v-model="formData.tags" />
+       </div>
 
              <!-- Transaction Status -->
        <div class="space-y-4">
@@ -242,6 +234,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeftIcon, CheckIcon } from '@heroicons/vue/24/outline'
 import { apiClient } from '@/services/api'
 import { useProfileData } from '@/composables/useProfileData'
+import TagSelector from '@/components/TagSelector.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -255,7 +248,6 @@ const accounts = ref([])
 const categories = ref([])
 const loading = ref(false)
 const isSubmitting = ref(false)
-const tagsInput = ref('')
 
 // Form data
 const formData = ref({
@@ -266,7 +258,8 @@ const formData = ref({
   description: '',
   transaction_type: 'expense',
   paid: false,
-  cleared: false
+  cleared: false,
+  tags: []
 })
 
 // Computed
@@ -324,11 +317,9 @@ function populateForm(transactionData) {
     description: transactionData.description || '',
     transaction_type: transactionData.transaction_type,
     paid: transactionData.paid,
-    cleared: transactionData.cleared
+    cleared: transactionData.cleared,
+    tags: transactionData.tag_list
   }
-  
-  // Set tags
-  tagsInput.value = transactionData.tag_list.join(', ')
 }
 
 // Fetch accounts and categories
@@ -367,12 +358,6 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    // Process tags
-    const tags = tagsInput.value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0)
-
     // Convert amount to cents
     const amountInCents = Math.round(parseFloat(formData.value.amount) * 100)
 
@@ -385,7 +370,7 @@ const handleSubmit = async () => {
       transaction_type: formData.value.transaction_type,
       paid: formData.value.paid,
       cleared: formData.value.cleared,
-      tag_list: tags
+      tag_list: (formData.value.tags || []).join(',')
     }
 
     const response = await apiClient.patch(`/transactions/${route.params.id}`, transactionData)
@@ -412,9 +397,6 @@ const formatCurrency = (amount) => {
 
 // Load initial data
 onMounted(async () => {
-  //await Promise.all([fetchTransaction(), fetchAccounts(), fetchCategories()])
-  await fetchAccounts()
-  await fetchCategories()
-  await fetchTransaction()
+  await Promise.all([fetchAccounts(), fetchCategories(), fetchTransaction()])
 })
 </script> 

@@ -13,6 +13,27 @@
     </div>
 
     <form @submit.prevent="handleSubmit" class="bg-white rounded-lg shadow p-6 space-y-6">
+      <!-- Template Selection -->
+      <div>
+        <label class="block text-sm font-medium text-secondary-700 mb-2">
+          Use Template (Optional)
+        </label>
+        <select
+          v-model="selectedTemplate"
+          @change="applyTemplate"
+          class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+        >
+          <option value="">Choose a template...</option>
+          <option
+            v-for="template in templates"
+            :key="template.id"
+            :value="template.id"
+          >
+            {{ template.name }}
+          </option>
+        </select>
+      </div>
+
       <!-- Account Selection -->
       <div>
         <label class="block text-sm font-medium text-secondary-700 mb-2">
@@ -146,15 +167,7 @@
         <label class="block text-sm font-medium text-secondary-700 mb-2">
           Tags
         </label>
-        <input
-          v-model="tagsInput"
-          type="text"
-          placeholder="Enter tags separated by commas"
-          class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
-        />
-        <p class="text-xs text-secondary-500 mt-1">
-          Separate multiple tags with commas (e.g., "food, groceries, essentials")
-        </p>
+        <TagSelector v-model="formData.tags" />
       </div>
 
       <!-- Transaction Status -->
@@ -224,7 +237,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeftIcon, CheckIcon } from '@heroicons/vue/24/outline'
 import { apiClient } from '@/services/api'
+import { templateService } from '@/services/templateService'
 import { useProfileData } from '@/composables/useProfileData'
+import TagSelector from '@/components/TagSelector.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -235,8 +250,9 @@ const { currentProfile } = useProfileData()
 // State
 const accounts = ref([])
 const categories = ref([])
+const templates = ref([])
+const selectedTemplate = ref('')
 const isSubmitting = ref(false)
-const tagsInput = ref('')
 
 // Form data
 const formData = ref({
@@ -246,8 +262,9 @@ const formData = ref({
   due_date: new Date().toISOString().split('T')[0],
   description: '',
   transaction_type: 'expense',
-  paid: false,
-  cleared: false
+  paid: true,
+  cleared: false,
+  tags: []
 })
 
 // Computed
@@ -302,6 +319,45 @@ async function fetchCategories() {
   }
 }
 
+async function fetchTemplates() {
+  try {
+    const response = await templateService.getTemplates()
+    
+    if (response) {
+      templates.value = response || []
+    }
+  } catch (error) {
+    console.error('Error fetching templates:', error)
+  }
+}
+
+function applyTemplate() {
+  if (!selectedTemplate.value) return
+  
+  const template = templates.value.find(t => t.id === selectedTemplate.value)
+  if (!template) return
+  
+  // Populate form fields from template
+  // Amount comes from template.amount if it exists, otherwise from template.attrs.amount
+  const amount = Number(template.amount) || 0
+  
+  formData.value.account_id = template.account_id || ''
+  formData.value.category_id = template.category_id || ''
+  formData.value.transaction_type = template.transaction_type || 'expense'
+  formData.value.description = template.notes || ''
+  formData.value.tags = template.tag_list || []
+  
+  // Convert amount from cents to dollars if needed
+  if (amount && typeof amount === 'number' && amount > 0) {
+    formData.value.amount = (amount / 100).toFixed(2)
+  } else {
+    formData.value.amount = ''
+  }
+  
+  // Reset template selection
+  selectedTemplate.value = ''
+}
+
 // Actions
 const goBack = () => {
   router.go(-1)
@@ -313,12 +369,6 @@ const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    // Process tags
-    const tags = tagsInput.value
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0)
-
     // Convert amount to cents
     const amountInCents = Math.round(parseFloat(formData.value.amount) * 100)
 
@@ -331,7 +381,7 @@ const handleSubmit = async () => {
       transaction_type: formData.value.transaction_type,
       paid: formData.value.paid,
       cleared: formData.value.cleared,
-      tag_list: tags
+      tag_list: (formData.value.tags || []).join(',')
     }
 
     const response = await apiClient.post('/transactions', transactionData)
@@ -362,6 +412,6 @@ const formatCurrency = (amount) => {
 
 // Load initial data
 onMounted(async () => {
-  await Promise.all([fetchAccounts(), fetchCategories()])
+  await Promise.all([fetchAccounts(), fetchCategories(), fetchTemplates()])
 })
 </script> 

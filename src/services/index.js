@@ -4,6 +4,7 @@ export { authService } from './authService'
 export { userService } from './userService'
 export { transactionService } from './transactionService'
 export { profileService } from './profileService'
+export { templateService } from './templateService'
 
 // Re-export commonly used services
 export * from './api'
