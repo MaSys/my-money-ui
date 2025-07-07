@@ -156,7 +156,7 @@ async function fetchPaidTransactions() {
     })
     
     if (response.data) {
-      paidTransactions.value = response.data || []
+      paidTransactions.value = (response.data || []).filter(o => !o.from_transaction_id)
     } else {
       console.error('Failed to fetch paid transactions:', response.data.error)
       paidTransactions.value = []
