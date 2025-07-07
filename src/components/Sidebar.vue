@@ -64,6 +64,15 @@
           Accounts
         </router-link>
 
+        <router-link
+          to="/templates"
+          class="flex items-center px-4 py-3 text-sm font-medium rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
+          :class="$route.name === 'templates' ? 'bg-primary-100 text-primary-700' : 'text-secondary-700'"
+        >
+          <DocumentTextIcon class="mr-3 h-5 w-5" />
+          Templates
+        </router-link>
+
         <a
           href="#"
           class="flex items-center px-4 py-3 text-sm font-medium text-secondary-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
@@ -145,7 +154,8 @@ import {
   XMarkIcon,
   ArrowRightOnRectangleIcon,
   PresentationChartLineIcon,
-  PresentationChartBarIcon
+  PresentationChartBarIcon,
+  DocumentTextIcon
 } from '@heroicons/vue/24/outline'
 import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
 import ProfileSwitcher from '@/components/ProfileSwitcher.vue'

@@ -94,6 +94,12 @@ const router = createRouter({
           name: 'transactions-report',
           component: () => import('@/views/TransactionsReportView.vue'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'templates',
+          name: 'templates',
+          component: () => import('@/views/TemplateManageView.vue'),
+          meta: { requiresAuth: true }
         }
         // Add more protected routes here as needed
       ]
