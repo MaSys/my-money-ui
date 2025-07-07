@@ -227,7 +227,7 @@
         </label>
 
         <label
-          v-if="formData.paid && selectedAccount && selectedAccount.reconcile"
+          v-if="formData.paid && isReconcilableTransaction"
           class="flex items-center cursor-pointer group"
         >
           <div class="relative">
@@ -322,6 +322,22 @@ const filteredCategories = computed(() => {
   )
 })
 
+const selectedToAccount = computed(() => {
+  return accounts.value.find(account => account.id === formData.value.to_account_id)
+})
+
+const isReconcilableTransaction = computed(() => {
+  if (formData.value.transaction_type === 'transfer') {
+    // For transfers, check if either account is reconcilable
+    const sourceAccountReconcile = selectedAccount.value?.reconcile
+    const destAccountReconcile = selectedToAccount.value?.reconcile
+    return sourceAccountReconcile || destAccountReconcile
+  } else {
+    // For regular transactions, check if the account is reconcilable
+    return selectedAccount.value?.reconcile
+  }
+})
+
 // Watchers
 watch(() => formData.value.transaction_type, () => {
   // Reset category when transaction type changes
@@ -337,6 +353,11 @@ watch(() => formData.value.account_id, () => {
   if (formData.value.to_account_id === formData.value.account_id) {
     formData.value.to_account_id = ''
   }
+})
+
+watch(() => formData.value.to_account_id, () => {
+  // Reset cleared status when to_account changes (for transfers)
+  formData.value.cleared = false
 })
 
 // Fetch accounts and categories
