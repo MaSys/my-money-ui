@@ -93,11 +93,48 @@
             </div>
             <span class="ml-3 text-sm font-medium text-green-600">Income</span>
           </label>
+          <label class="flex items-center cursor-pointer group">
+            <div class="relative">
+              <input
+                v-model="formData.transaction_type"
+                type="radio"
+                value="transfer"
+                class="sr-only"
+              />
+              <div class="w-4 h-4 border-2 border-secondary-300 rounded-full group-hover:border-blue-400 transition-colors"
+                   :class="formData.transaction_type === 'transfer' ? 'border-blue-500 bg-blue-500' : ''">
+                <div v-if="formData.transaction_type === 'transfer'" 
+                     class="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+              </div>
+            </div>
+            <span class="ml-3 text-sm font-medium text-blue-600">Transfer</span>
+          </label>
         </div>
       </div>
 
-      <!-- Category Selection -->
-      <div>
+      <!-- To Account Selection (only for transfers) -->
+      <div v-if="formData.transaction_type === 'transfer'">
+        <label class="block text-sm font-medium text-secondary-700 mb-2">
+          To Account <span class="text-red-500">*</span>
+        </label>
+        <select
+          v-model="formData.to_account_id"
+          required
+          class="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+        >
+          <option value="">Select destination account</option>
+          <option
+            v-for="account in availableToAccounts"
+            :key="account.id"
+            :value="account.id"
+          >
+            {{ account.name }} ({{ formatCurrency(account.balance / 100) }})
+          </option>
+        </select>
+      </div>
+
+      <!-- Category Selection (only for income/expense) -->
+      <div v-if="formData.transaction_type !== 'transfer'">
         <label class="block text-sm font-medium text-secondary-700 mb-2">
           Category <span class="text-red-500">*</span>
         </label>
@@ -238,6 +275,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeftIcon, CheckIcon } from '@heroicons/vue/24/outline'
 import { apiClient } from '@/services/api'
 import { templateService } from '@/services/templateService'
+import { transactionService } from '@/services/transactionService'
 import { useProfileData } from '@/composables/useProfileData'
 import TagSelector from '@/components/TagSelector.vue'
 
@@ -264,12 +302,18 @@ const formData = ref({
   transaction_type: 'expense',
   paid: true,
   cleared: false,
-  tags: []
+  tags: [],
+  to_account_id: ''
 })
 
 // Computed
 const selectedAccount = computed(() => {
   return accounts.value.find(account => account.id === formData.value.account_id)
+})
+
+const availableToAccounts = computed(() => {
+  // Filter out the selected account from the to_account options
+  return accounts.value.filter(account => account.id !== formData.value.account_id)
 })
 
 const filteredCategories = computed(() => {
@@ -282,11 +326,17 @@ const filteredCategories = computed(() => {
 watch(() => formData.value.transaction_type, () => {
   // Reset category when transaction type changes
   formData.value.category_id = ''
+  // Reset to_account_id when transaction type changes
+  formData.value.to_account_id = ''
 })
 
 watch(() => formData.value.account_id, () => {
   // Reset cleared status when account changes
   formData.value.cleared = false
+  // Reset to_account_id if it's the same as selected account
+  if (formData.value.to_account_id === formData.value.account_id) {
+    formData.value.to_account_id = ''
+  }
 })
 
 // Fetch accounts and categories
@@ -344,6 +394,13 @@ function applyTemplate() {
   formData.value.description = template.notes || ''
   formData.value.tags = template.tag_list || []
   
+  // Handle transfer template specific field
+  if (template.transaction_type === 'transfer') {
+    formData.value.to_account_id = template.to_account_id || ''
+  } else {
+    formData.value.to_account_id = ''
+  }
+  
   // Convert amount from cents to dollars if needed
   formData.value.amount = ''
   if (amount && typeof amount === 'number' && amount > 0) {
@@ -368,26 +425,52 @@ const handleSubmit = async () => {
     // Convert amount to cents
     const amountInCents = Math.round(parseFloat(formData.value.amount) * 100)
 
-    const transactionData = {
-      account_id: formData.value.account_id,
-      category_id: formData.value.category_id,
-      amount: amountInCents,
-      due_date: formData.value.due_date,
-      description: formData.value.description,
-      transaction_type: formData.value.transaction_type,
-      paid: formData.value.paid,
-      cleared: formData.value.cleared,
-      tag_list: (formData.value.tags || []).join(',')
-    }
+    if (formData.value.transaction_type === 'transfer') {
+      // Handle transfer transaction
+      const transferData = {
+        account_id: formData.value.account_id,
+        to_account_id: formData.value.to_account_id,
+        amount: amountInCents,
+        due_date: formData.value.due_date,
+        paid: formData.value.paid,
+        cleared: formData.value.cleared,
+        notes: formData.value.description,
+        tag_list: (formData.value.tags || []).join(',')
+      }
 
-    const response = await apiClient.post('/transactions', transactionData)
+      const response = await transactionService.createTransferTransaction(transferData)
 
-    if (response.data) {
-      // Success - redirect to transactions view or back to previous page
-      if (route.query.account_id) {
-        router.push(`/accounts/${route.query.account_id}`)
-      } else {
-        router.push('/transactions')
+      if (response.success) {
+        // Success - redirect to transactions view or back to previous page
+        if (route.query.account_id) {
+          router.push(`/accounts/${route.query.account_id}`)
+        } else {
+          router.push('/transactions')
+        }
+      }
+    } else {
+      // Handle regular transaction
+      const transactionData = {
+        account_id: formData.value.account_id,
+        category_id: formData.value.category_id,
+        amount: amountInCents,
+        due_date: formData.value.due_date,
+        description: formData.value.description,
+        transaction_type: formData.value.transaction_type,
+        paid: formData.value.paid,
+        cleared: formData.value.cleared,
+        tag_list: (formData.value.tags || []).join(',')
+      }
+
+      const response = await transactionService.createTransaction(transactionData)
+
+      if (response.success) {
+        // Success - redirect to transactions view or back to previous page
+        if (route.query.account_id) {
+          router.push(`/accounts/${route.query.account_id}`)
+        } else {
+          router.push('/transactions')
+        }
       }
     }
   } catch (error) {

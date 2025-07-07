@@ -43,6 +43,16 @@ export const transactionService = {
     }
   },
 
+  // Create new transfer transaction
+  async createTransferTransaction(transferData) {
+    try {
+      const response = await apiClient.post('/transactions/transfers', { transaction: transferData })
+      return handleApiResponse(response)
+    } catch (error) {
+      return handleApiError(error)
+    }
+  },
+
   // Update existing transaction
   async updateTransaction(id, transactionData) {
     try {
