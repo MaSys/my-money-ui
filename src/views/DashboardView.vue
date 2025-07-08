@@ -24,13 +24,12 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-secondary-500">Total Balance</p>
-            <p class="text-2xl font-semibold text-secondary-900">$12,543.32</p>
+            <p class="text-2xl font-semibold text-secondary-900">{{ dashboardStore.balanceFormatted }}</p>
           </div>
         </div>
         <div class="mt-4">
-          <div class="flex items-center text-sm text-green-600">
-            <ArrowUpIcon class="h-4 w-4 mr-1" />
-            <span>+2.5% from last month</span>
+          <div class="flex items-center text-sm text-secondary-500">
+            <span>Payment accounts - Credit cards</span>
           </div>
         </div>
       </div>
@@ -41,14 +40,13 @@
             <ArrowUpIcon class="h-8 w-8 text-blue-600" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-secondary-500">Income</p>
-            <p class="text-2xl font-semibold text-secondary-900">$4,230.00</p>
+            <p class="text-sm font-medium text-secondary-500">Monthly Income</p>
+            <p class="text-2xl font-semibold text-secondary-900">{{ dashboardStore.incomeFormatted }}</p>
           </div>
         </div>
         <div class="mt-4">
-          <div class="flex items-center text-sm text-green-600">
-            <ArrowUpIcon class="h-4 w-4 mr-1" />
-            <span>+5.2% from last month</span>
+          <div class="flex items-center text-sm text-secondary-500">
+            <span>This month</span>
           </div>
         </div>
       </div>
@@ -59,14 +57,13 @@
             <ArrowDownIcon class="h-8 w-8 text-red-600" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-secondary-500">Expenses</p>
-            <p class="text-2xl font-semibold text-secondary-900">$2,847.69</p>
+            <p class="text-sm font-medium text-secondary-500">Monthly Expenses</p>
+            <p class="text-2xl font-semibold text-secondary-900">{{ dashboardStore.expensesFormatted }}</p>
           </div>
         </div>
         <div class="mt-4">
-          <div class="flex items-center text-sm text-red-600">
-            <ArrowUpIcon class="h-4 w-4 mr-1" />
-            <span>+1.3% from last month</span>
+          <div class="flex items-center text-sm text-secondary-500">
+            <span>This month</span>
           </div>
         </div>
       </div>
@@ -77,14 +74,13 @@
             <ChartBarIcon class="h-8 w-8 text-purple-600" />
           </div>
           <div class="ml-4">
-            <p class="text-sm font-medium text-secondary-500">Savings</p>
-            <p class="text-2xl font-semibold text-secondary-900">$1,382.31</p>
+            <p class="text-sm font-medium text-secondary-500">Monthly Savings</p>
+            <p class="text-2xl font-semibold text-secondary-900">{{ dashboardStore.savingsFormatted }}</p>
           </div>
         </div>
         <div class="mt-4">
-          <div class="flex items-center text-sm text-green-600">
-            <ArrowUpIcon class="h-4 w-4 mr-1" />
-            <span>+3.8% from last month</span>
+          <div class="flex items-center text-sm text-secondary-500">
+            <span>This month</span>
           </div>
         </div>
       </div>
@@ -98,33 +94,36 @@
         </div>
         <div class="p-6">
           <div class="space-y-4">
-            <div v-for="transaction in recentTransactions" :key="transaction.id" class="flex items-center justify-between">
+            <div v-if="dashboardStore.recentTransactions.length === 0" class="text-center py-8 text-secondary-500">
+              No recent transactions
+            </div>
+            <div v-for="transaction in dashboardStore.recentTransactions" :key="transaction.id" class="flex items-center justify-between">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
                   <div class="w-10 h-10 bg-secondary-100 rounded-full flex items-center justify-center">
-                    <component :is="transaction.icon" class="h-5 w-5 text-secondary-600" />
+                    <BanknotesIcon class="h-5 w-5 text-secondary-600" />
                   </div>
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-secondary-900">{{ transaction.description }}</p>
-                  <p class="text-sm text-secondary-500">{{ transaction.date }}</p>
+                  <p class="text-sm text-secondary-500">{{ formatTransactionDate(transaction.due_date) }}</p>
                 </div>
               </div>
               <div class="text-right">
                 <p :class="[
                   'text-sm font-medium',
-                  transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                  transaction.transaction_type === 'income' ? 'text-green-600' : 'text-red-600'
                 ]">
-                  {{ transaction.type === 'income' ? '+' : '-' }}${{ Math.abs(transaction.amount) }}
+                  {{ transaction.transaction_type === 'income' ? '+' : '-' }}{{ formatCurrency(Math.abs(transaction.amount) / 100) }}
                 </p>
-                <p class="text-xs text-secondary-500">{{ transaction.category }}</p>
+                <p class="text-xs text-secondary-500">{{ transaction.category?.name || 'Uncategorized' }}</p>
               </div>
             </div>
           </div>
           <div class="mt-6">
-            <a href="#" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+            <router-link to="/transactions" class="text-sm font-medium text-primary-600 hover:text-primary-500">
               View all transactions →
-            </a>
+            </router-link>
           </div>
         </div>
       </div>
@@ -168,10 +167,6 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   ChartBarIcon,
-  ShoppingCartIcon,
-  HomeIcon,
-  FilmIcon,
-  TruckIcon,
   PlusIcon
 } from '@heroicons/vue/24/outline'
 import { useDashboardStore } from '@/stores/dashboard'
@@ -194,53 +189,33 @@ const createTransaction = () => {
   router.push('/transactions/create')
 }
 
-const recentTransactions = ref([
-  {
-    id: 1,
-    description: 'Grocery Store',
-    amount: -89.32,
-    type: 'expense',
-    category: 'Food',
-    date: '2 hours ago',
-    icon: ShoppingCartIcon
-  },
-  {
-    id: 2,
-    description: 'Salary Deposit',
-    amount: 4230.00,
-    type: 'income',
-    category: 'Salary',
-    date: '1 day ago',
-    icon: BanknotesIcon
-  },
-  {
-    id: 3,
-    description: 'Rent Payment',
-    amount: -1200.00,
-    type: 'expense',
-    category: 'Housing',
-    date: '2 days ago',
-    icon: HomeIcon
-  },
-  {
-    id: 4,
-    description: 'Netflix Subscription',
-    amount: -15.99,
-    type: 'expense',
-    category: 'Entertainment',
-    date: '3 days ago',
-    icon: FilmIcon
-  },
-  {
-    id: 5,
-    description: 'Gas Station',
-    amount: -45.20,
-    type: 'expense',
-    category: 'Transportation',
-    date: '4 days ago',
-    icon: TruckIcon
+// Utility functions
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount)
+}
+
+const formatTransactionDate = (dateString) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffTime = Math.abs(now - date)
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 1) {
+    return 'Today'
+  } else if (diffDays === 2) {
+    return 'Yesterday'
+  } else if (diffDays <= 7) {
+    return `${diffDays - 1} days ago`
+  } else {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    })
   }
-])
+}
 
 const budgetCategories = ref([
   {

@@ -164,8 +164,6 @@ async function fetchAccounts() {
   }
 }
 
-
-
 // Actions
 const handleRefresh = () => {
   fetchAccounts()

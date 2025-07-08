@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { transactionService } from '@/services/transactionService'
 import { userService } from '@/services/userService'
+import { accountService } from '@/services/accountService'
 
 export const useDashboardStore = defineStore('dashboard', () => {
   // State
@@ -55,25 +56,44 @@ export const useDashboardStore = defineStore('dashboard', () => {
     error.value = null
     
     try {
+      // Fetch accounts first to calculate total balance
+      const accountsResponse = await accountService.getAccounts()
+      
+      if (accountsResponse.success) {
+        accounts.value = accountsResponse.data || []
+      }
+
       // Fetch transactions
       const transactionsResponse = await transactionService.getTransactions({
-        limit: 10,
-        order: 'desc'
+        planned: true
       })
       
       if (transactionsResponse.success) {
-        transactions.value = transactionsResponse.data.transactions || []
+        transactions.value = transactionsResponse.data || []
       }
 
       // Fetch transaction stats
       const statsResponse = await transactionService.getTransactionStats()
       
       if (statsResponse.success) {
+        // Calculate total balance using account data instead of backend calculation
+        const calculatedTotalBalance = accountService.calculateTotalBalance(accounts.value)
+        
         stats.value = {
-          totalBalance: statsResponse.data.total_balance || 0,
+          totalBalance: calculatedTotalBalance,
           monthlyIncome: statsResponse.data.monthly_income || 0,
           monthlyExpenses: statsResponse.data.monthly_expenses || 0,
           monthlySavings: statsResponse.data.monthly_savings || 0
+        }
+      } else {
+        // If stats fetch fails, still calculate total balance from accounts
+        const calculatedTotalBalance = accountService.calculateTotalBalance(accounts.value)
+        
+        stats.value = {
+          totalBalance: calculatedTotalBalance,
+          monthlyIncome: 0,
+          monthlyExpenses: 0,
+          monthlySavings: 0
         }
       }
 
