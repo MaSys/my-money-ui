@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { transactionService } from '@/services/transactionService'
 import { userService } from '@/services/userService'
 import { accountService } from '@/services/accountService'
+import { reportService } from '@/services/reportService'
 
 export const useDashboardStore = defineStore('dashboard', () => {
   // State
@@ -72,29 +73,46 @@ export const useDashboardStore = defineStore('dashboard', () => {
         transactions.value = transactionsResponse.data || []
       }
 
-      // Fetch transaction stats
-      const statsResponse = await transactionService.getTransactionStats()
+      // Get current month date range
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
       
-      if (statsResponse.success) {
-        // Calculate total balance using account data instead of backend calculation
-        const calculatedTotalBalance = accountService.calculateTotalBalance(accounts.value)
+      // Format dates for API
+      const startDate = startOfMonth.toISOString().split('T')[0]
+      const endDate = endOfMonth.toISOString().split('T')[0]
+      
+      // Fetch income/expenses report for current month
+      let monthlyIncome = 0
+      let monthlyExpenses = 0
+      
+      try {
+        const incomeExpensesData = await reportService.getIncomeExpensesReport({
+          startDate,
+          endDate
+        })
         
-        stats.value = {
-          totalBalance: calculatedTotalBalance,
-          monthlyIncome: statsResponse.data.monthly_income || 0,
-          monthlyExpenses: statsResponse.data.monthly_expenses || 0,
-          monthlySavings: statsResponse.data.monthly_savings || 0
+        if (incomeExpensesData) {
+          // Convert from cents to dollars
+          monthlyIncome = Math.abs(incomeExpensesData.income || 0) / 100
+          monthlyExpenses = Math.abs(incomeExpensesData.expense || 0) / 100
         }
-      } else {
-        // If stats fetch fails, still calculate total balance from accounts
-        const calculatedTotalBalance = accountService.calculateTotalBalance(accounts.value)
-        
-        stats.value = {
-          totalBalance: calculatedTotalBalance,
-          monthlyIncome: 0,
-          monthlyExpenses: 0,
-          monthlySavings: 0
-        }
+      } catch (error) {
+        console.error('Error fetching income/expenses report:', error)
+        // Keep defaults of 0
+      }
+      
+      // Calculate total balance using account data
+      const calculatedTotalBalance = accountService.calculateTotalBalance(accounts.value)
+      
+      // Calculate monthly savings (income - expenses)
+      const monthlySavings = monthlyIncome - monthlyExpenses
+      
+      stats.value = {
+        totalBalance: calculatedTotalBalance,
+        monthlyIncome,
+        monthlyExpenses,
+        monthlySavings
       }
 
       return { success: true }
