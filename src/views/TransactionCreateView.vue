@@ -292,12 +292,21 @@ const templates = ref([])
 const selectedTemplate = ref('')
 const isSubmitting = ref(false)
 
+// Utility function to get today's date in browser timezone
+const getTodayInBrowserTimezone = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // Form data
 const formData = ref({
   account_id: '',
   category_id: '',
   amount: '',
-  due_date: new Date().toISOString().split('T')[0],
+  due_date: getTodayInBrowserTimezone(),
   description: '',
   transaction_type: 'expense',
   paid: true,
